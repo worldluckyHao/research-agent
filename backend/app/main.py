@@ -1,19 +1,15 @@
-# -*- coding: utf-8 -*-
-# @ Time：2026/8/11 14:21
-# @ Auth：zh
-# @ File：main.py
-# @Company：HUT
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, status
+
+from backend.app.schemas.paper import (
+    PaperCreate,
+    PaperResponse,
+)
 
 
-class PaperCreate(BaseModel):
-    title: str
-    authors: list[str]
-    year: int
-
-
-app = FastAPI()
+app = FastAPI(
+    title="ResearchAgent API",
+    version="0.2.0"
+)
 
 
 @app.get("/")
@@ -30,11 +26,15 @@ def health():
         "service": "research-agent"
     }
 
+
 @app.get("/papers/{paper_id}")
-def get_paper(paper_id: int):
+def get_paper(
+    paper_id: int
+):
     return {
         "paper_id": paper_id
     }
+
 
 @app.get("/papers")
 def search_papers(
@@ -46,9 +46,17 @@ def search_papers(
         "page": page
     }
 
-@app.post("/papers")
-def create_paper(paper: PaperCreate):
+
+@app.post(
+    "/papers",
+    response_model=PaperResponse,
+    status_code=status.HTTP_201_CREATED
+)
+def create_paper(
+    paper: PaperCreate
+):
     return {
-        "message": "paper created",
-        "paper": paper
+        "id": 1001,
+        **paper.model_dump(),
+        "internal_note": "not exposed"
     }
