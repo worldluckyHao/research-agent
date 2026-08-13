@@ -1,62 +1,74 @@
-from fastapi import FastAPI, status
+import time
 
-from backend.app.schemas.paper import (
-    PaperCreate,
-    PaperResponse,
+from fastapi import (
+    FastAPI,
+    Request,
 )
+
+from fastapi.middleware.cors import (
+    CORSMiddleware,
+)
+
+from app.api.router import api_router
 
 
 app = FastAPI(
     title="ResearchAgent API",
-    version="0.2.0"
+    version="0.3.0",
 )
 
 
-@app.get("/")
-def root():
-    return {
-        "message": "ResearchAgent API is running"
-    }
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
 
 
-@app.get("/health")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.middleware("http")
+async def add_process_time_header(
+    request: Request,
+    call_next,
+):
+
+    start_time = time.perf_counter()
+
+    response = await call_next(
+        request
+    )
+
+    process_time = (
+        time.perf_counter()
+        - start_time
+    )
+
+    response.headers[
+        "X-Process-Time"
+    ] = str(process_time)
+
+    return response
+
+
+@app.get(
+    "/health",
+    tags=["health"],
+)
 def health():
     return {
         "status": "ok",
-        "service": "research-agent"
+        "service": "research-agent",
     }
 
 
-@app.get("/papers/{paper_id}")
-def get_paper(
-    paper_id: int
-):
-    return {
-        "paper_id": paper_id
-    }
-
-
-@app.get("/papers")
-def search_papers(
-    keyword: str | None = None,
-    page: int = 1
-):
-    return {
-        "keyword": keyword,
-        "page": page
-    }
-
-
-@app.post(
-    "/papers",
-    response_model=PaperResponse,
-    status_code=status.HTTP_201_CREATED
+app.include_router(
+    api_router,
+    prefix="/api/v1",
 )
-def create_paper(
-    paper: PaperCreate
-):
-    return {
-        "id": 1001,
-        **paper.model_dump(),
-        "internal_note": "not exposed"
-    }
