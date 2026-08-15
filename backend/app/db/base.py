@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-# @ Time：2026/8/15 14:13
-# @ Auth：zh
-# @ File：base.py
-# @Company：HUT
+from sqlalchemy.orm import DeclarativeBase
 
-
+"""
+所有数据库的总登记处
+"""
+class Base(DeclarativeBase):
+    pass

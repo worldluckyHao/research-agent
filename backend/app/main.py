@@ -1,74 +1,52 @@
-import time
+from fastapi import Depends, FastAPI
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from contextlib import asynccontextmanager
+from backend.app.api.router import api_router
+from backend.app.dependencies import get_db
+from backend.app.models.paper import Paper
+from backend.app.db.session import engine
+from backend.app.db.base import Base
 
-from fastapi import (
-    FastAPI,
-    Request,
-)
 
-from fastapi.middleware.cors import (
-    CORSMiddleware,
-)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
 
-from app.api.router import api_router
+    yield
 
+    await engine.dispose()
 
 app = FastAPI(
-    title="ResearchAgent API",
-    version="0.3.0",
+    title="Research Agent API",
+    lifespan=lifespan,
 )
 
 
-allowed_origins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-]
-
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.middleware("http")
-async def add_process_time_header(
-    request: Request,
-    call_next,
-):
-
-    start_time = time.perf_counter()
-
-    response = await call_next(
-        request
-    )
-
-    process_time = (
-        time.perf_counter()
-        - start_time
-    )
-
-    response.headers[
-        "X-Process-Time"
-    ] = str(process_time)
-
-    return response
-
-
-@app.get(
-    "/health",
-    tags=["health"],
-)
-def health():
-    return {
-        "status": "ok",
-        "service": "research-agent",
-    }
-
-
+# 注册 API 路由
 app.include_router(
     api_router,
     prefix="/api/v1",
 )
+
+
+@app.get("/health")
+async def health():
+    return {
+        "status": "ok"
+    }
+
+
+@app.get("/health/db")
+async def database_health(
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        text("SELECT 1")
+    )
+
+    value = result.scalar_one()
+
+    return {
+        "status": "ok",
+        "database": value,
+    }

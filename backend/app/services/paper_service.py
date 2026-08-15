@@ -1,58 +1,108 @@
+from typing import List, Optional
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.models.paper import Paper
 from backend.app.schemas.paper import (
     PaperCreate,
-    PaperResponse,
+    PaperUpdate,
 )
 
 
-PAPERS: dict[int, PaperResponse] = {
-    1: PaperResponse(
-        id=1,
-        title="M3Rain",
-        authors=["Author A"],
-        year=2026,
-        abstract=None,
-        keywords=[
-            "precipitation",
-            "multimodal",
-        ],
-        language="en",
-    ),
-    2: PaperResponse(
-        id=2,
-        title="Rainformer",
-        authors=["Author B"],
-        year=2024,
-        abstract=None,
-        keywords=[
-            "rainfall",
-            "transformer",
-        ],
-        language="en",
-    ),
-}
+async def create_paper(
+    db: AsyncSession,
+    paper_data: PaperCreate,
+) -> Paper:
 
-
-def get_paper_by_id(
-    paper_id: int,
-) -> PaperResponse | None:
-
-    return PAPERS.get(paper_id)
-
-
-def create_paper(
-    paper: PaperCreate,
-) -> PaperResponse:
-
-    new_id = max(
-        PAPERS.keys(),
-        default=0,
-    ) + 1
-
-    new_paper = PaperResponse(
-        id=new_id,
-        **paper.model_dump(),
+    paper = Paper(
+        title=paper_data.title,
+        authors=paper_data.authors,
+        year=paper_data.year,
+        doi=paper_data.doi,
+        abstract=paper_data.abstract,
+        keywords=paper_data.keywords,
+        language=paper_data.language,
     )
 
-    PAPERS[new_id] = new_paper
+    try:
+        db.add(paper)
 
-    return new_paper
+        await db.commit()
+
+        await db.refresh(paper)
+
+        return paper
+
+    except Exception:
+        await db.rollback()
+        raise
+
+
+async def get_papers(
+    db: AsyncSession,
+) -> List[Paper]:
+
+    result = await db.execute(
+        select(Paper).order_by(Paper.id)
+    )
+
+    papers = result.scalars().all()
+
+    return list(papers)
+
+
+async def get_paper_by_id(
+    db: AsyncSession,
+    paper_id: int,
+) -> Optional[Paper]:
+
+    result = await db.execute(
+        select(Paper).where(Paper.id == paper_id)
+    )
+
+    return result.scalar_one_or_none()
+
+
+async def update_paper(
+    db: AsyncSession,
+    paper: Paper,
+    paper_data: PaperUpdate,
+) -> Paper:
+
+    update_data = paper_data.model_dump(
+        exclude_unset=True
+    )
+
+    try:
+        for field, value in update_data.items():
+            setattr(
+                paper,
+                field,
+                value,
+            )
+
+        await db.commit()
+
+        await db.refresh(paper)
+
+        return paper
+
+    except Exception:
+        await db.rollback()
+        raise
+
+
+async def delete_paper(
+    db: AsyncSession,
+    paper: Paper,
+) -> None:
+
+    try:
+        await db.delete(paper)
+
+        await db.commit()
+
+    except Exception:
+        await db.rollback()
+        raise

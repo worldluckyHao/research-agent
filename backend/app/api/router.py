@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api import papers
+from backend.app.api import papers
 
 
 api_router = APIRouter()
