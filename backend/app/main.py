@@ -17,54 +17,52 @@ from backend.app.db.session import engine
 # 初始化日志系统
 # ============================================================
 #
-# settings.DEBUG = True
-#     → DEBUG 日志
+# 日志等级现在不再直接依赖 DEBUG，
+# 而是由：
 #
-# settings.DEBUG = False
-#     → INFO 日志
+# backend/.env
+#
+# LOG_LEVEL=DEBUG
+#
+# 控制。
 #
 setup_logging(
-    debug=settings.DEBUG
+    level=settings.LOG_LEVEL
 )
 
 
 # ============================================================
-# FastAPI 生命周期管理
+# FastAPI 生命周期
 # ============================================================
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    FastAPI Application 生命周期。
+    FastAPI 生命周期管理。
 
-    Day6 开始以后：
+    启动阶段：
+        暂时不需要特殊操作。
 
-    不再使用：
+    注意：
+        Day6 开始数据库 Schema 已经完全交给 Alembic，
+        所以这里绝对不要重新加入：
 
         Base.metadata.create_all()
 
-    创建数据库表。
-
-    因为数据库 Schema 已经正式交给：
-
-        Alembic
-
-    管理。
-
-    所以这里启动阶段暂时没有额外数据库操作。
+    关闭阶段：
+        释放 SQLAlchemy Engine 连接池。
     """
 
     # -------------------------
-    # FastAPI 启动阶段
+    # Application startup
     # -------------------------
 
     yield
 
     # -------------------------
-    # FastAPI 关闭阶段
+    # Application shutdown
     # -------------------------
-    #
-    # 释放 SQLAlchemy AsyncEngine 的连接池资源。
+
     await engine.dispose()
 
 
@@ -73,25 +71,25 @@ async def lifespan(app: FastAPI):
 # ============================================================
 
 app = FastAPI(
+    # 从 Settings 读取应用名称。
     title=settings.APP_NAME,
+
+    # 从 Settings 读取版本。
+    version=settings.APP_VERSION,
+
+    # 开发环境通常 True；
+    # 正式环境应该 False。
+    debug=settings.DEBUG,
+
+    # 生命周期管理。
     lifespan=lifespan,
 )
 
 
 # ============================================================
-# 注册统一业务异常 Handler
+# Day9：业务异常 Handler
 # ============================================================
-#
-# 所有 AppException 的子类都会进入：
-#
-# app_exception_handler
-#
-# 例如：
-#
-# PaperNotFoundException
-# PaperDOIExistsException
-# EmptyUpdateException
-#
+
 app.add_exception_handler(
     AppException,
     app_exception_handler,
@@ -99,16 +97,9 @@ app.add_exception_handler(
 
 
 # ============================================================
-# 注册未知异常兜底 Handler
+# Day9：未知异常 Handler
 # ============================================================
-#
-# 如果某个 Exception 没有被前面的业务 Handler 处理，
-# 最后就会进入这里。
-#
-# 返回：
-#
-# 500 Internal Server Error
-#
+
 app.add_exception_handler(
     Exception,
     unhandled_exception_handler,
@@ -116,26 +107,32 @@ app.add_exception_handler(
 
 
 # ============================================================
-# 注册 API Router
+# 注册 API
 # ============================================================
-#
-# api_router 中目前会继续包含：
-#
-# /api/v1/papers/
-#
-app.include_router(api_router)
+
+app.include_router(
+    api_router
+)
 
 
 # ============================================================
-# 健康检查接口
+# Health Check
 # ============================================================
 
-@app.get("/health")
+@app.get(
+    "/health",
+    tags=["health"],
+)
 async def health_check():
     """
-    用于检查 FastAPI 服务是否正常运行。
+    检查 Research Agent API 是否正常运行。
+
+    以后 Docker / Nginx / 云服务器
+    也可以使用这个接口进行健康检查。
     """
 
     return {
-        "status": "ok"
+        "status": "ok",
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
     }
