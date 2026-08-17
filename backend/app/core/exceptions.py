@@ -134,6 +134,85 @@ class EmptyUpdateException(AppException):
 
 
 # ============================================================
+# Username 已存在
+# ============================================================
+
+class UsernameAlreadyExistsException(AppException):
+    """
+    用户注册时 username 已经被其他账号使用。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="USERNAME_ALREADY_EXISTS",
+            message="Username already exists",
+            status_code=409,
+        )
+
+
+# ============================================================
+# Email 已存在
+# ============================================================
+
+class EmailAlreadyExistsException(AppException):
+    """
+    用户注册时 email 已经被其他账号使用。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="EMAIL_ALREADY_EXISTS",
+            message="Email already exists",
+            status_code=409,
+        )
+
+# ============================================================
+# 登录凭据错误
+# ============================================================
+
+class InvalidCredentialsException(AppException):
+    """
+    用户登录失败。
+
+    例如：
+
+    - username 不存在
+    - password 错误
+    - JWT 无效
+    - JWT 已过期
+
+    对客户端统一返回 401。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="INVALID_CREDENTIALS",
+            message="Could not validate credentials",
+            status_code=401,
+        )
+
+
+# ============================================================
+# 用户账号已禁用
+# ============================================================
+
+class InactiveUserException(AppException):
+    """
+    用户存在，但：
+
+        is_active = False
+
+    不允许继续访问受保护资源。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="INACTIVE_USER",
+            message="Inactive user",
+            status_code=403,
+        )
+
+# ============================================================
 # 统一业务异常 Handler
 # ============================================================
 

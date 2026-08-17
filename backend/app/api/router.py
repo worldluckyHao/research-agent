@@ -1,44 +1,52 @@
 from fastapi import APIRouter
 
-from backend.app.api import papers
+from backend.app.api import (
+    auth,
+    papers,
+    users,
+)
 from backend.app.core.config import settings
 
 
 # ============================================================
-# API 总 Router
+# API v1 Root Router
 # ============================================================
-#
-# settings.API_V1_PREFIX 默认：
-#
-# /api/v1
-#
-# 所以这里最终仍然是：
-#
-# /api/v1
-#
+
 api_router = APIRouter(
     prefix=settings.API_V1_PREFIX
 )
 
 
 # ============================================================
-# 注册 Paper Router
+# Authentication API
 # ============================================================
 #
-# papers.py 自己的 prefix：
+# 最终：
 #
-# /papers
-#
-# 两层 Router 拼起来：
-#
-# /api/v1
-# +
-# /papers
-#
-# =
-#
-# /api/v1/papers
+# POST /api/v1/auth/login
 #
 api_router.include_router(
+    auth.router
+)
+
+
+# ============================================================
+# Paper API
+# ============================================================
+
+api_router.include_router(
     papers.router
+)
+
+
+# ============================================================
+# User API
+# ============================================================
+#
+# POST /api/v1/users/register
+#
+# GET /api/v1/users/me
+#
+api_router.include_router(
+    users.router
 )

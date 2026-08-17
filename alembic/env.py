@@ -9,7 +9,7 @@ from backend.app.core.config import settings
 from backend.app.db.base import Base
 
 from backend.app.models.paper import Paper
-
+from backend.app.models.user import User
 
 config = context.config
 
