@@ -4,6 +4,7 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Query,
     status,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,11 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.dependencies import get_db
 from backend.app.schemas.paper import (
     PaperCreate,
+    PaperListResponse,
     PaperResponse,
     PaperUpdate,
 )
 from backend.app.services import paper_service
-
+from typing import Literal, Optional
 
 router = APIRouter(
     prefix="/papers",
@@ -40,12 +42,55 @@ async def create_paper(
 
 @router.get(
     "/",
-    response_model=List[PaperResponse],
+    response_model=PaperListResponse,
 )
 async def get_papers(
+    page: int = Query(
+        default=1,
+        ge=1,
+    ),
+    page_size: int = Query(
+        default=20,
+        ge=1,
+        le=100,
+    ),
+    year: Optional[int] = Query(
+        default=None,
+        ge=1900,
+        le=2100,
+    ),
+    source: Optional[str] = Query(
+        default=None,
+        max_length=100,
+    ),
+    search: Optional[str] = Query(
+        default=None,
+        min_length=1,
+        max_length=200,
+    ),
+    sort_by: Literal[
+        "id",
+        "title",
+        "year",
+        "created_at",
+        "updated_at",
+    ] = "id",
+    sort_order: Literal[
+        "asc",
+        "desc",
+    ] = "asc",
     db: AsyncSession = Depends(get_db),
 ):
-    return await paper_service.get_papers(db)
+    return await paper_service.get_papers(
+        db=db,
+        page=page,
+        page_size=page_size,
+        year=year,
+        source=source,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
 
 
 @router.get(

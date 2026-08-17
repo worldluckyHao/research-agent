@@ -32,6 +32,16 @@ class PaperCreate(BaseModel):
         max_length=255,
     )
 
+    url: Optional[str] = Field(
+        default=None,
+        max_length=1000,
+    )
+
+    source: Optional[str] = Field(
+        default=None,
+        max_length=100,
+    )
+
     abstract: Optional[str] = Field(
         default=None,
         max_length=5000,
@@ -42,7 +52,10 @@ class PaperCreate(BaseModel):
         max_length=10,
     )
 
-    language: str = "en"
+    language: str = Field(
+        default="en",
+        max_length=20,
+    )
 
 
 class PaperUpdate(BaseModel):
@@ -72,6 +85,16 @@ class PaperUpdate(BaseModel):
         max_length=255,
     )
 
+    url: Optional[str] = Field(
+        default=None,
+        max_length=1000,
+    )
+
+    source: Optional[str] = Field(
+        default=None,
+        max_length=100,
+    )
+
     abstract: Optional[str] = Field(
         default=None,
         max_length=5000,
@@ -82,7 +105,10 @@ class PaperUpdate(BaseModel):
         max_length=10,
     )
 
-    language: Optional[str] = None
+    language: Optional[str] = Field(
+        default=None,
+        max_length=20,
+    )
 
 
 class PaperResponse(BaseModel):
@@ -100,12 +126,29 @@ class PaperResponse(BaseModel):
 
     doi: Optional[str] = None
 
+    url: Optional[str] = None
+
+    source: Optional[str] = None
+
     abstract: Optional[str] = None
 
     keywords: list[str] = Field(
         default_factory=list
     )
 
-    language: str = "en"
+    language: str
 
     created_at: datetime
+
+    updated_at: datetime
+
+class PaperListResponse(BaseModel):
+    items: list[PaperResponse]
+
+    total: int
+
+    page: int
+
+    page_size: int
+
+    pages: int
