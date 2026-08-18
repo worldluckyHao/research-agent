@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from backend.app.api import (
     auth,
     papers,
+    projects,
     users,
 )
 from backend.app.core.config import settings
@@ -15,7 +16,13 @@ from backend.app.core.config import settings
 api_router = APIRouter(
     prefix=settings.API_V1_PREFIX
 )
+# ============================================================
+# Research Project API
+# ============================================================
 
+api_router.include_router(
+    projects.router
+)
 
 # ============================================================
 # Authentication API

@@ -6,7 +6,7 @@ from backend.app.models.associations import (
 # 再加载 ORM Models。
 from backend.app.models.paper import Paper
 from backend.app.models.user import User
-
+from backend.app.models.research_project import ResearchProject
 
 __all__ = [
     "Paper",

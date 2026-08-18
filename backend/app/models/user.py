@@ -87,6 +87,11 @@ class User(Base):
         lazy="selectin",
     )
 
+    # 一个用户可以拥有多个研究项目
+    research_projects: Mapped[list["ResearchProject"]] = relationship(
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

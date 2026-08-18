@@ -84,6 +84,21 @@ class PaperNotFoundException(AppException):
             status_code=404,
         )
 
+class ProjectNotFoundException(AppException):
+    """
+    当前用户访问的研究项目不存在。
+
+    这里既可能是真的不存在，
+    也可能是该项目不属于当前用户。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="PROJECT_NOT_FOUND",
+            message="Project not found",
+            status_code=404,
+        )
+
 
 # ============================================================
 # DOI 重复
