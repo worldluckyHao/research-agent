@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from backend.app.core.config import settings
 from backend.app.db.base import Base
-
+from backend.app.models.associations import (
+    user_saved_papers,
+)
 from backend.app.models.paper import Paper
 from backend.app.models.user import User
 

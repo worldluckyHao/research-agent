@@ -39,32 +39,11 @@ logger = logging.getLogger(__name__)
 async def create_paper(
     db: AsyncSession,
     paper_data: PaperCreate,
+    owner_id: int,
 ) -> Paper:
     """
-    创建 Paper 并保存进 PostgreSQL。
-
-    流程：
-
-    PaperCreate
-        ↓
-    Paper ORM
-        ↓
-    db.add()
-        ↓
-    commit()
-        ↓
-    refresh()
-        ↓
-    return Paper
-
-    如果数据库出现异常：
-
-    rollback()
+    创建 Paper，并记录创建者。
     """
-
-    # ========================================================
-    # Pydantic Schema → SQLAlchemy ORM
-    # ========================================================
 
     paper = Paper(
         title=paper_data.title,
@@ -76,70 +55,28 @@ async def create_paper(
         abstract=paper_data.abstract,
         keywords=paper_data.keywords,
         language=paper_data.language,
+
+        # Day13：当前登录用户成为 owner。
+        owner_id=owner_id,
     )
 
     try:
-        # ====================================================
-        # 把新的 ORM 对象加入当前 Session
-        # ====================================================
-
         db.add(paper)
 
-        # ====================================================
-        # 真正提交事务到 PostgreSQL
-        # ====================================================
-
         await db.commit()
-
-        # ====================================================
-        # 从数据库重新读取 Paper 最新状态
-        #
-        # 例如：
-        #
-        # id
-        # created_at
-        # updated_at
-        #
-        # 都可能由数据库生成。
-        # ====================================================
-
         await db.refresh(paper)
 
-        # ====================================================
-        # 正常业务日志
-        # ====================================================
-
         logger.info(
-            "Paper created: id=%s title=%s",
+            "Paper created: id=%s owner_id=%s",
             paper.id,
-            paper.title,
+            owner_id,
         )
 
         return paper
 
-    # ========================================================
-    # 数据库完整性异常
-    # ========================================================
-    #
-    # 常见：
-    #
-    # UNIQUE
-    # CHECK
-    # FOREIGN KEY
-    #
     except IntegrityError as exc:
-        # 数据库事务已经失败，
-        # 必须先 rollback。
         await db.rollback()
 
-        # ====================================================
-        # DOI 唯一约束冲突
-        # ====================================================
-        #
-        # Day7 我们给 DOI 建立：
-        #
-        # uq_papers_doi
-        #
         if (
             paper_data.doi is not None
             and "uq_papers_doi" in str(exc.orig)
@@ -149,37 +86,15 @@ async def create_paper(
                 paper_data.doi,
             )
 
-            # 把数据库异常转换成业务异常。
-            #
-            # 最终 FastAPI 返回：
-            #
-            # 409 Conflict
             raise PaperDOIExistsException() from exc
 
-        # ====================================================
-        # 其他 IntegrityError
-        # ====================================================
-        #
-        # 例如以后出现：
-        #
-        # CheckConstraint
-        # ForeignKey
-        #
         logger.exception(
             "Database integrity error while creating paper"
         )
 
-        # 暂时继续向上抛出，
-        # 最终由全局未知异常 Handler 处理。
         raise
 
-    # ========================================================
-    # 其他未知异常
-    # ========================================================
-
     except Exception:
-        # 无论是什么写数据库异常，
-        # 都要 rollback。
         await db.rollback()
 
         logger.exception(

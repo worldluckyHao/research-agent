@@ -12,7 +12,7 @@ from backend.app.core.exceptions import (
 from backend.app.core.security import hash_password, verify_password
 from backend.app.models.user import User
 from backend.app.schemas.user import UserCreate
-
+from backend.app.models.paper import Paper
 
 # ============================================================
 # Logger
@@ -378,4 +378,72 @@ async def create_user(
             "Unexpected error while creating user"
         )
 
+        raise
+
+# ============================================================
+# 收藏 Paper
+# ============================================================
+
+async def save_paper(
+    db: AsyncSession,
+    user: User,
+    paper: Paper,
+) -> None:
+    """
+    将 Paper 加入当前用户的收藏列表。
+    """
+
+    # 已收藏则无需重复添加。
+    if paper in user.saved_papers:
+        return
+
+    try:
+        user.saved_papers.append(paper)
+        await db.commit()
+
+        logger.info(
+            "Paper saved: user_id=%s paper_id=%s",
+            user.id,
+            paper.id,
+        )
+
+    except Exception:
+        await db.rollback()
+        logger.exception(
+            "Failed to save paper"
+        )
+        raise
+
+
+# ============================================================
+# 取消收藏
+# ============================================================
+
+async def unsave_paper(
+    db: AsyncSession,
+    user: User,
+    paper: Paper,
+) -> None:
+    """
+    从当前用户的收藏列表移除 Paper。
+    """
+
+    if paper not in user.saved_papers:
+        return
+
+    try:
+        user.saved_papers.remove(paper)
+        await db.commit()
+
+        logger.info(
+            "Paper unsaved: user_id=%s paper_id=%s",
+            user.id,
+            paper.id,
+        )
+
+    except Exception:
+        await db.rollback()
+        logger.exception(
+            "Failed to unsave paper"
+        )
         raise

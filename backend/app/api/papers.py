@@ -12,7 +12,11 @@ from backend.app.core.exceptions import (
     EmptyUpdateException,
     PaperNotFoundException,
 )
-from backend.app.dependencies import get_db
+from backend.app.dependencies import (
+    get_current_user,
+    get_db,
+)
+from backend.app.models.user import User
 from backend.app.schemas.paper import (
     PaperCreate,
     PaperListResponse,
@@ -44,27 +48,24 @@ router = APIRouter(
 async def create_paper(
     paper_data: PaperCreate,
 
-    # FastAPI 会自动调用 get_db()，
-    # 得到一个 AsyncSession。
     db: AsyncSession = Depends(get_db),
+
+    # Day13：创建 Paper 必须登录。
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
     """
-    创建一篇新的 Paper。
+    创建论文。
 
-    Request Body 经过：
-
-        PaperCreate
-
-    做 Pydantic 校验。
-
-    真正保存数据库的逻辑交给：
-
-        paper_service.create_paper()
+    owner_id 自动取当前登录用户，
+    客户端不能自己指定。
     """
 
     return await paper_service.create_paper(
         db=db,
         paper_data=paper_data,
+        owner_id=current_user.id,
     )
 
 

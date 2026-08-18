@@ -138,6 +138,10 @@ class PaperResponse(BaseModel):
 
     language: str
 
+    # 创建该 Paper 的 User ID。
+    # 老数据可能没有 owner，所以允许 None。
+    owner_id: Optional[int] = None
+
     created_at: datetime
 
     updated_at: datetime
@@ -152,3 +156,11 @@ class PaperListResponse(BaseModel):
     page_size: int
 
     pages: int
+
+class UserSavedPapersResponse(BaseModel):
+    """
+    当前用户的收藏列表。
+    """
+
+    items: list[PaperResponse]
+    total: int

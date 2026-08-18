@@ -5,6 +5,9 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.core.exceptions import (
+    PaperNotFoundException,
+)
 from backend.app.dependencies import (
     get_current_user,
     get_db,
@@ -13,9 +16,12 @@ from backend.app.models.user import User
 from backend.app.schemas.user import (
     UserCreate,
     UserResponse,
+    UserSavedPapersResponse,
 )
-from backend.app.services import user_service
-
+from backend.app.services import (
+    paper_service,
+    user_service,
+)
 
 # ============================================================
 # User Router
@@ -99,3 +105,98 @@ async def get_me(
     """
 
     return current_user
+
+# ============================================================
+# 收藏 Paper
+# ============================================================
+
+@router.post(
+    "/me/saved-papers/{paper_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def save_paper(
+    paper_id: int,
+
+    db: AsyncSession = Depends(get_db),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    """
+    当前登录用户收藏 Paper。
+    """
+
+    paper = await paper_service.get_paper_by_id(
+        db=db,
+        paper_id=paper_id,
+    )
+
+    if paper is None:
+        raise PaperNotFoundException()
+
+    await user_service.save_paper(
+        db=db,
+        user=current_user,
+        paper=paper,
+    )
+
+
+# ============================================================
+# 取消收藏
+# ============================================================
+
+@router.delete(
+    "/me/saved-papers/{paper_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def unsave_paper(
+    paper_id: int,
+
+    db: AsyncSession = Depends(get_db),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    """
+    当前登录用户取消收藏 Paper。
+    """
+
+    paper = await paper_service.get_paper_by_id(
+        db=db,
+        paper_id=paper_id,
+    )
+
+    if paper is None:
+        raise PaperNotFoundException()
+
+    await user_service.unsave_paper(
+        db=db,
+        user=current_user,
+        paper=paper,
+    )
+
+# ============================================================
+# 获取收藏列表
+# ============================================================
+
+@router.get(
+    "/me/saved-papers",
+    response_model=UserSavedPapersResponse,
+)
+async def get_saved_papers(
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    """
+    返回当前用户收藏的 Papers。
+    """
+
+    return {
+        "items": current_user.saved_papers,
+        "total": len(
+            current_user.saved_papers
+        ),
+    }

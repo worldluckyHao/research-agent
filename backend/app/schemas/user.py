@@ -6,7 +6,9 @@ from pydantic import (
     EmailStr,
     Field,
 )
-
+from backend.app.schemas.paper import (
+    PaperResponse,
+)
 
 # ============================================================
 # User Registration Request
@@ -118,3 +120,11 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     updated_at: datetime
+
+class UserSavedPapersResponse(BaseModel):
+    """
+    当前用户的收藏列表。
+    """
+
+    items: list[PaperResponse]
+    total: int
