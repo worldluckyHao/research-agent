@@ -227,6 +227,49 @@ class InactiveUserException(AppException):
             status_code=403,
         )
 
+class ProjectNotFoundException(AppException):
+    """ResearchProject 不存在。"""
+
+    def __init__(self):
+        super().__init__(
+            code="PROJECT_NOT_FOUND",
+            message="Research project not found",
+            status_code=404,
+        )
+
+
+class ProjectAccessDeniedException(AppException):
+    """当前用户不是项目 owner。"""
+
+    def __init__(self):
+        super().__init__(
+            code="PROJECT_ACCESS_DENIED",
+            message="You do not have permission to access this project",
+            status_code=403,
+        )
+
+
+class ProjectPaperAlreadyExistsException(AppException):
+    """Paper 已经存在于该项目。"""
+
+    def __init__(self):
+        super().__init__(
+            code="PROJECT_PAPER_ALREADY_EXISTS",
+            message="Paper already exists in this project",
+            status_code=409,
+        )
+
+
+class ProjectPaperNotFoundException(AppException):
+    """Paper 不在该项目中。"""
+
+    def __init__(self):
+        super().__init__(
+            code="PROJECT_PAPER_NOT_FOUND",
+            message="Paper is not in this project",
+            status_code=404,
+        )
+
 # ============================================================
 # 统一业务异常 Handler
 # ============================================================

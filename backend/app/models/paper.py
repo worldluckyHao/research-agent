@@ -99,13 +99,7 @@ class Paper(Base):
         default="en",
     )
 
-
-    # ========================================================
-    # User -> Paper 一对多
-    # ========================================================
-
-    # nullable=True：
-    # 兼容 Day1-Day12 已存在、没有 owner 的旧论文。
+    # Paper 创建者。
     owner_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey(
             "users.id",
@@ -115,33 +109,33 @@ class Paper(Base):
         index=True,
     )
 
-
-    # ========================================================
-    # Relationship
-    # ========================================================
-
-    # paper.owner -> User
     owner: Mapped[Optional["User"]] = relationship(
         back_populates="papers",
     )
 
-    # 收藏这篇 Paper 的所有 User。
+    # 收藏该 Paper 的用户。
     saved_by_users: Mapped[list["User"]] = relationship(
         secondary=user_saved_papers,
         back_populates="saved_papers",
         lazy="selectin",
     )
 
+    # Day15：Paper 属于哪些 Project。
+    project_links: Mapped[list["ProjectPaper"]] = relationship(
+        back_populates="paper",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
         nullable=False,
+        server_default=func.now(),
     )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
+        nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False,
     )

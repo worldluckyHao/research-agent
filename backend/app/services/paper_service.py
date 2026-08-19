@@ -21,7 +21,16 @@ from backend.app.schemas.paper import (
     PaperCreate,
     PaperUpdate,
 )
-
+from sqlalchemy.orm import selectinload
+from backend.app.core.exceptions import (
+    ProjectAccessDeniedException,
+    ProjectNotFoundException,
+    ProjectPaperAlreadyExistsException,
+    ProjectPaperNotFoundException,
+)
+from backend.app.models.paper import Paper
+from backend.app.models.project_paper import ProjectPaper
+from backend.app.models.research_project import ResearchProject
 
 # ============================================================
 # 当前 Service 模块 logger
@@ -150,6 +159,30 @@ async def create_paper(
 
         raise
 
+async def get_owned_project(
+    db: AsyncSession,
+    project_id: int,
+    user_id: int,
+) -> ResearchProject:
+    """
+    查询 Project，并验证当前用户是否为 owner。
+    """
+
+    result = await db.execute(
+        select(ResearchProject).where(
+            ResearchProject.id == project_id
+        )
+    )
+
+    project = result.scalar_one_or_none()
+
+    if project is None:
+        raise ProjectNotFoundException()
+
+    if project.owner_id != user_id:
+        raise ProjectAccessDeniedException()
+
+    return project
 
 # ============================================================
 # 查询 Paper 列表

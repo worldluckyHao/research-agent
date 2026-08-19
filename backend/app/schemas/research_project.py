@@ -1,91 +1,107 @@
 from datetime import datetime
-from typing import Literal
+from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+)
+
+from backend.app.schemas.paper import PaperResponse
 
 
-# ============================================================
-# 创建 Project 时使用
-# ============================================================
 class ResearchProjectCreate(BaseModel):
     """
-    POST /projects/
-    请求体使用的 Schema。
+    创建 ResearchProject。
     """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
 
     name: str = Field(
-        ...,
-        min_length=2,
+        min_length=3,
         max_length=200,
-        description="研究项目名称",
     )
 
-    description: str | None = Field(
+    description: Optional[str] = Field(
         default=None,
         max_length=5000,
-        description="研究项目描述",
-    )
-
-    model_config = ConfigDict(
-        extra="forbid",
     )
 
 
-# ============================================================
-# 修改 Project 时使用
-# ============================================================
 class ResearchProjectUpdate(BaseModel):
     """
-    PATCH /projects/{project_id}
-    请求体使用的 Schema。
-
-    PATCH 是部分更新，因此字段都不是必填项。
+    PATCH 更新 ResearchProject。
     """
-
-    name: str | None = Field(
-        default=None,
-        min_length=2,
-        max_length=200,
-    )
-
-    description: str | None = Field(
-        default=None,
-        max_length=5000,
-    )
-
-    status: Literal[
-                "active",
-                "completed",
-                "archived",
-            ] | None = None
 
     model_config = ConfigDict(
         extra="forbid",
     )
 
+    name: Optional[str] = Field(
+        default=None,
+        min_length=3,
+        max_length=200,
+    )
 
-# ============================================================
-# API 返回 Project 时使用
-# ============================================================
+    description: Optional[str] = Field(
+        default=None,
+        max_length=5000,
+    )
+
+
 class ResearchProjectResponse(BaseModel):
     """
-    Project API 返回数据。
+    Project 基础返回结构。
     """
-
-    id: int
-
-    name: str
-
-    description: str | None
-
-    status: str
-
-    owner_id: int
-
-    created_at: datetime
-
-    updated_at: datetime
 
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+    id: int
+    name: str
+    description: Optional[str] = None
+    owner_id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class ResearchProjectListResponse(BaseModel):
+    """
+    Project 分页列表。
+    """
+
+    items: list[ResearchProjectResponse]
+
+    total: int
+    page: int
+    page_size: int
+    pages: int
+
+
+# ============================================================
+# Day15
+# ============================================================
+
+class ProjectPaperResponse(BaseModel):
+    """
+    Project 中的一篇 Paper，同时返回加入时间。
+    """
+
+    paper: PaperResponse
+    added_at: datetime
+
+
+class ProjectPaperListResponse(BaseModel):
+    """
+    Project Papers 分页列表。
+    """
+
+    items: list[ProjectPaperResponse]
+
+    total: int
+    page: int
+    page_size: int
+    pages: int
