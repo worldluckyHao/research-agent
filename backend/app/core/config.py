@@ -174,6 +174,57 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000"
     )
 
+    # ========================================================
+    # External HTTP Client
+    # ========================================================
+
+    # 建立 TCP/TLS 连接最长等待时间。
+    HTTP_CONNECT_TIMEOUT: float = 5.0
+
+    # 等待第三方 API 返回数据的最长时间。
+    HTTP_READ_TIMEOUT: float = 10.0
+
+    # 向第三方发送数据的最长时间。
+    HTTP_WRITE_TIMEOUT: float = 10.0
+
+    # 等待连接池空闲连接的最长时间。
+    HTTP_POOL_TIMEOUT: float = 5.0
+
+    # 整个应用允许的最大 HTTP 连接数。
+    HTTP_MAX_CONNECTIONS: int = 50
+
+    # 可保持 Keep-Alive 的连接数量。
+    HTTP_MAX_KEEPALIVE_CONNECTIONS: int = 20
+
+
+    # ========================================================
+    # Crossref
+    # ========================================================
+
+    CROSSREF_BASE_URL: str = (
+        "https://api.crossref.org/v1"
+    )
+
+    # 用于 User-Agent，便于第三方识别我们的应用。
+    CROSSREF_USER_AGENT: str = (
+        "Research-Agent/0.1"
+    )
+
+    # ========================================================
+    # arXiv API
+    # ========================================================
+
+    # arXiv 官方查询接口。
+    ARXIV_API_URL: str = (
+        "https://export.arxiv.org/api/query"
+    )
+
+    # 官方建议连续 API 请求之间保留约 3 秒间隔。
+    ARXIV_MIN_REQUEST_INTERVAL_SECONDS: float = 3.0
+
+    # 我们自己的交互式搜索接口不允许一次请求过多结果。
+    # arXiv 本身支持更大结果集，但 Research Agent 当前不需要。
+    ARXIV_MAX_PAGE_SIZE: int = 50
 
     # ========================================================
     # Pydantic Settings 配置

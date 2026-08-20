@@ -1,10 +1,11 @@
 from collections.abc import AsyncGenerator
 
 import jwt
-from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from backend.app.clients.arxiv import (
+    ArxivClient,
+)
 from backend.app.core.config import settings
 from backend.app.core.exceptions import (
     InactiveUserException,
@@ -13,7 +14,12 @@ from backend.app.core.exceptions import (
 from backend.app.db.session import AsyncSessionLocal
 from backend.app.models.user import User
 from backend.app.services import user_service
+import httpx
 
+from fastapi import (
+    Depends,
+    Request,
+)
 
 # ============================================================
 # Database Dependency
@@ -190,3 +196,21 @@ async def get_current_user(
     # ========================================================
 
     return user
+
+def get_http_client(
+    request: Request,
+) -> httpx.AsyncClient:
+    """
+    获取应用级共享 HTTPX Client。
+    """
+
+    return request.app.state.http_client
+
+def get_arxiv_client(
+    request: Request,
+) -> ArxivClient:
+    """
+    获取应用级 arXiv Client。
+    """
+
+    return request.app.state.arxiv_client

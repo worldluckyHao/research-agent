@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-
+import httpx
 from fastapi import FastAPI
 
 from backend.app.api.router import api_router
@@ -11,7 +11,7 @@ from backend.app.core.exceptions import (
 )
 from backend.app.core.logging import setup_logging
 from backend.app.db.session import engine
-
+from backend.app.clients.arxiv import ArxivClient
 
 # ============================================================
 # 初始化日志系统
@@ -38,31 +38,44 @@ setup_logging(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    FastAPI 生命周期管理。
-
-    启动阶段：
-        暂时不需要特殊操作。
-
-    注意：
-        Day6 开始数据库 Schema 已经完全交给 Alembic，
-        所以这里绝对不要重新加入：
-
-        Base.metadata.create_all()
-
-    关闭阶段：
-        释放 SQLAlchemy Engine 连接池。
+    管理数据库连接池和外部 HTTP 连接池生命周期。
     """
 
-    # -------------------------
-    # Application startup
-    # -------------------------
+    # 分别控制网络各阶段 timeout。
+    timeout = httpx.Timeout(
+        connect=settings.HTTP_CONNECT_TIMEOUT,
+        read=settings.HTTP_READ_TIMEOUT,
+        write=settings.HTTP_WRITE_TIMEOUT,
+        pool=settings.HTTP_POOL_TIMEOUT,
+    )
+
+    # 控制连接池规模，避免无界创建连接。
+    limits = httpx.Limits(
+        max_connections=settings.HTTP_MAX_CONNECTIONS,
+        max_keepalive_connections=(
+            settings.HTTP_MAX_KEEPALIVE_CONNECTIONS
+        ),
+    )
+
+    # 整个 FastAPI 生命周期共享一个 AsyncClient。
+    app.state.http_client = httpx.AsyncClient(
+        timeout=timeout,
+        limits=limits,
+        follow_redirects=True,
+    )
+
+    # arXiv Client 保持应用级状态，
+    # 这样限流 Lock 和请求时间才能跨 Request 生效。
+    app.state.arxiv_client = ArxivClient(
+        client=app.state.http_client
+    )
 
     yield
 
-    # -------------------------
-    # Application shutdown
-    # -------------------------
+    # 关闭 HTTP 连接池。
+    await app.state.http_client.aclose()
 
+    # 关闭数据库连接池。
     await engine.dispose()
 
 

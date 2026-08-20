@@ -270,6 +270,49 @@ class ProjectPaperNotFoundException(AppException):
             status_code=404,
         )
 
+class ExternalServiceTimeoutException(AppException):
+    """第三方服务请求超时。"""
+
+    def __init__(self):
+        super().__init__(
+            code="EXTERNAL_SERVICE_TIMEOUT",
+            message="External service request timed out",
+            status_code=504,
+        )
+
+
+class ExternalServiceUnavailableException(AppException):
+    """第三方服务暂时不可用。"""
+
+    def __init__(self):
+        super().__init__(
+            code="EXTERNAL_SERVICE_UNAVAILABLE",
+            message="External service is unavailable",
+            status_code=502,
+        )
+
+
+class ExternalResourceNotFoundException(AppException):
+    """第三方数据源中不存在该资源。"""
+
+    def __init__(self):
+        super().__init__(
+            code="EXTERNAL_RESOURCE_NOT_FOUND",
+            message="External resource not found",
+            status_code=404,
+        )
+
+
+class ExternalServiceResponseException(AppException):
+    """第三方服务返回了无法解析的数据。"""
+
+    def __init__(self):
+        super().__init__(
+            code="EXTERNAL_SERVICE_INVALID_RESPONSE",
+            message="External service returned an invalid response",
+            status_code=502,
+        )
+
 # ============================================================
 # 统一业务异常 Handler
 # ============================================================
