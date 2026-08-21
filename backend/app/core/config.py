@@ -1,6 +1,5 @@
 from pathlib import Path
-from typing import Literal
-
+from typing import Literal, Optional
 from pydantic import SecretStr
 from pydantic_settings import (
     BaseSettings,
@@ -305,6 +304,24 @@ class Settings(BaseSettings):
             for origin in self.CORS_ORIGINS.split(",")
             if origin.strip()
         ]
+
+    # ========================================================
+    # OpenAlex
+    # ========================================================
+
+    # OpenAlex REST API 根地址。
+    OPENALEX_BASE_URL: str = (
+        "https://api.openalex.org"
+    )
+
+    # 可选。
+    # 开发阶段不配置 API Key 也可以使用基础 API。
+    OPENALEX_API_KEY: Optional[SecretStr] = None
+
+    # 我们自己的 API 限制。
+    # OpenAlex 官方最大支持 100，
+    # Research Agent 当前限制 50，避免单请求过大。
+    OPENALEX_MAX_PAGE_SIZE: int = 50
 
 
 # ============================================================

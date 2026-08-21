@@ -1,10 +1,14 @@
 import httpx
-
-from backend.app.clients.crossref import (
-    CrossrefClient,
+import asyncio
+import logging
+from backend.app.services.paper_deduplication import (
+    deduplicate_and_merge,
 )
 from backend.app.schemas.external import (
-    CrossrefPaperResponse,
+    MultiSourcePaperSearchResponse,
+)
+from backend.app.clients.crossref import (
+    CrossrefClient,
 )
 from typing import Literal
 
@@ -19,6 +23,15 @@ from backend.app.schemas.external import (
     ArxivPaperResponse,
     ArxivSearchResponse,
     CrossrefPaperResponse,
+)
+from backend.app.providers.base import (
+    PaperProvider,
+)
+
+from backend.app.schemas.external import (
+    PaperSearchSort,
+    UnifiedPaperMetadata,
+    UnifiedPaperSearchResponse,
 )
 
 def _extract_authors(
@@ -317,4 +330,238 @@ async def get_arxiv_paper_by_id(
 
     return ArxivPaperResponse(
         **parsed["items"][0]
+    )
+
+# ============================================================
+# Unified Paper Provider Service
+# ============================================================
+
+async def search_papers(
+    provider: PaperProvider,
+    query: str,
+    page: int,
+    page_size: int,
+    sort: PaperSearchSort,
+) -> UnifiedPaperSearchResponse:
+    """
+    使用统一 PaperProvider 搜索论文。
+
+    今天这里只接 OpenAlex。
+    Day19 后可以进一步扩展成多 Provider 聚合。
+    """
+
+    return await provider.search(
+        query=query,
+        page=page,
+        page_size=page_size,
+        sort=sort,
+    )
+
+
+async def get_paper_from_provider(
+    provider: PaperProvider,
+    identifier: str,
+) -> UnifiedPaperMetadata:
+    """
+    使用统一 Provider 获取单篇论文。
+    """
+
+    return await provider.get(
+        identifier=identifier
+    )
+
+async def search_multiple_providers(
+    provider_map: dict[str, PaperProvider],
+    selected_providers: list[str],
+    query: str,
+    limit: int,
+    sort: PaperSearchSort,
+) -> MultiSourcePaperSearchResponse:
+    """
+    并发搜索多个论文 Provider。
+
+    设计目标：
+    1. Provider 并行请求；
+    2. 单一 Provider 失败时 Graceful Degradation；
+    3. 合并 Candidates；
+    4. Deduplicate；
+    5. Metadata Fusion。
+    """
+
+    providers = [
+        provider_map[name]
+        for name in selected_providers
+    ]
+
+
+    # --------------------------------------------------------
+    # 并发 Fan-out
+    # --------------------------------------------------------
+
+    tasks = [
+        provider.search(
+            query=query,
+            page=1,
+            page_size=limit,
+            sort=sort,
+        )
+        for provider in providers
+    ]
+
+
+    results = await asyncio.gather(
+        *tasks,
+        return_exceptions=True,
+    )
+
+
+    successful_results = []
+
+    failed_providers = []
+
+
+    # --------------------------------------------------------
+    # Graceful Degradation
+    # --------------------------------------------------------
+
+    for provider, result in zip(
+        providers,
+        results,
+    ):
+        if isinstance(
+            result,
+            Exception,
+        ):
+            failed_providers.append(
+                provider.name
+            )
+
+            logging.warning(
+                "Paper provider failed: "
+                "provider=%s error=%s",
+                provider.name,
+                type(result).__name__,
+            )
+
+            continue
+
+
+        successful_results.append(
+            result
+        )
+
+
+    # 所有 Provider 都失败，
+    # 此时不能假装返回空搜索结果。
+    if not successful_results:
+        from backend.app.core.exceptions import (
+            ExternalServiceUnavailableException,
+        )
+
+        raise ExternalServiceUnavailableException()
+
+
+    # --------------------------------------------------------
+    # Fair Candidate Interleaving
+    # --------------------------------------------------------
+
+    candidate_lists = [
+        result.items
+        for result
+        in successful_results
+    ]
+
+
+    candidates = []
+
+    max_length = max(
+        len(items)
+        for items in candidate_lists
+    )
+
+
+    # 轮询各 Provider 的排名结果：
+    #
+    # OpenAlex #1
+    # arXiv #1
+    # Crossref #1
+    # OpenAlex #2
+    # ...
+    #
+    # 避免固定 Provider 永远排在前面。
+    for index in range(max_length):
+
+        for items in candidate_lists:
+
+            if index < len(items):
+                candidates.append(
+                    items[index]
+                )
+
+
+    # --------------------------------------------------------
+    # Entity Resolution + Metadata Fusion
+    # --------------------------------------------------------
+
+    unique_papers = (
+        deduplicate_and_merge(
+            candidates
+        )
+    )
+
+
+    # --------------------------------------------------------
+    # Unified Ranking
+    # --------------------------------------------------------
+
+    if sort == PaperSearchSort.CITED:
+
+        unique_papers.sort(
+            key=lambda paper: (
+                paper.cited_by_count
+            ),
+            reverse=True,
+        )
+
+
+    elif sort == PaperSearchSort.NEWEST:
+
+        unique_papers.sort(
+            key=lambda paper: (
+                paper.publication_date
+                or paper.year
+                or 0
+            ),
+            reverse=True,
+        )
+
+
+    # relevance 保留 Provider
+    # interleaving 后的整体顺序。
+
+
+    return MultiSourcePaperSearchResponse(
+        query=query,
+
+        providers=[
+            result.provider
+            for result
+            in successful_results
+        ],
+
+        failed_providers=(
+            failed_providers
+        ),
+
+        candidate_count=len(
+            candidates
+        ),
+
+        unique_count=len(
+            unique_papers
+        ),
+
+        items=unique_papers[
+            :limit
+        ],
     )

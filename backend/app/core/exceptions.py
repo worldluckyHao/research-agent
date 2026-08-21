@@ -313,6 +313,18 @@ class ExternalServiceResponseException(AppException):
             status_code=502,
         )
 
+class ExternalServiceRateLimitedException(AppException):
+    """
+    上游第三方服务拒绝当前请求频率。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="EXTERNAL_SERVICE_RATE_LIMITED",
+            message="External service rate limit exceeded",
+            status_code=503,
+        )
+
 # ============================================================
 # 统一业务异常 Handler
 # ============================================================

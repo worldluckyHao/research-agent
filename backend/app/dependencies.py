@@ -20,6 +20,22 @@ from fastapi import (
     Depends,
     Request,
 )
+from backend.app.clients.openalex import (
+    OpenAlexClient,
+)
+
+from backend.app.providers.openalex import (
+    OpenAlexProvider,
+)
+from backend.app.clients.crossref import (
+    CrossrefClient,
+)
+from backend.app.providers.arxiv import (
+    ArxivProvider,
+)
+from backend.app.providers.crossref import (
+    CrossrefProvider,
+)
 
 # ============================================================
 # Database Dependency
@@ -214,3 +230,54 @@ def get_arxiv_client(
     """
 
     return request.app.state.arxiv_client
+
+def get_openalex_provider(
+    request: Request,
+) -> OpenAlexProvider:
+    """
+    构建 OpenAlex Provider。
+
+    Provider 本身无长期状态，
+    底层仍复用应用级 HTTPX AsyncClient。
+    """
+
+    http_client = (
+        request.app.state.http_client
+    )
+
+    openalex_client = OpenAlexClient(
+        client=http_client
+    )
+
+    return OpenAlexProvider(
+        client=openalex_client
+    )
+
+def get_arxiv_provider(
+    request: Request,
+) -> ArxivProvider:
+    """
+    ArxivClient 必须复用应用级实例，
+    因为它内部保存 Rate Limit 状态。
+    """
+
+    return ArxivProvider(
+        client=request.app.state.arxiv_client
+    )
+
+
+def get_crossref_provider(
+    request: Request,
+) -> CrossrefProvider:
+    """
+    Crossref Client 本身无长期状态，
+    底层复用共享 HTTPX AsyncClient。
+    """
+
+    client = CrossrefClient(
+        client=request.app.state.http_client
+    )
+
+    return CrossrefProvider(
+        client=client
+    )

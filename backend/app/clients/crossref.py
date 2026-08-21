@@ -122,3 +122,104 @@ class CrossrefClient:
             raise ExternalServiceResponseException()
 
         return message
+
+    async def search_works(
+        self,
+        query: str,
+        offset: int,
+        rows: int,
+        sort: str,
+        order: str = "desc",
+    ) -> dict:
+        """
+        搜索 Crossref Works。
+
+        query.bibliographic：
+        对 title、author、journal、year 等
+        bibliographic metadata 进行查询。
+        """
+
+        url = (
+            f"{self.base_url}/works"
+        )
+
+        params = {
+            "query.bibliographic": query,
+            "offset": offset,
+            "rows": rows,
+            "sort": sort,
+            "order": order,
+
+            # 只获取 Research Agent 需要的字段。
+            "select": (
+                "DOI,title,author,published,"
+                "container-title,URL,abstract,"
+                "is-referenced-by-count,"
+                "subject,language,type"
+            ),
+        }
+
+        if settings.CROSSREF_MAILTO:
+            params["mailto"] = (
+                settings.CROSSREF_MAILTO
+            )
+
+        headers = {
+            "User-Agent": (
+                settings.CROSSREF_USER_AGENT
+            ),
+            "Accept": (
+                "application/json"
+            ),
+        }
+
+        try:
+            response = await self.client.get(
+                url,
+                params=params,
+                headers=headers,
+            )
+
+        except httpx.TimeoutException as exc:
+            logger.warning(
+                "Crossref search timeout: type=%s",
+                type(exc).__name__,
+            )
+
+            raise ExternalServiceTimeoutException() from exc
+
+        except httpx.RequestError as exc:
+            logger.exception(
+                "Crossref search network error"
+            )
+
+            raise ExternalServiceUnavailableException() from exc
+
+
+        if response.status_code == 429:
+            raise ExternalServiceUnavailableException()
+
+
+        if response.is_error:
+            logger.error(
+                "Crossref search failed: status=%s",
+                response.status_code,
+            )
+
+            raise ExternalServiceUnavailableException()
+
+
+        try:
+            data = response.json()
+
+        except ValueError as exc:
+            raise ExternalServiceResponseException() from exc
+
+
+        message = data.get("message")
+
+        if not isinstance(message, dict):
+            raise ExternalServiceResponseException()
+
+
+        return message
