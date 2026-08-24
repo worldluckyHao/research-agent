@@ -1,5 +1,5 @@
 from collections.abc import AsyncGenerator
-
+import redis.asyncio as redis
 import jwt
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -281,3 +281,12 @@ def get_crossref_provider(
     return CrossrefProvider(
         client=client
     )
+
+def get_redis(
+    request: Request,
+) -> redis.Redis:
+    """
+    获取 Application 级 Redis Client。
+    """
+
+    return request.app.state.redis

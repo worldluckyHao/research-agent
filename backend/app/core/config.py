@@ -1,11 +1,10 @@
 from pathlib import Path
-from typing import Literal, Optional
 from pydantic import SecretStr
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
 )
-
+from typing import Literal, Optional
 
 # ============================================================
 # backend 目录的绝对路径
@@ -305,6 +304,32 @@ class Settings(BaseSettings):
             if origin.strip()
         ]
 
+    @property
+    def REDIS_URL(self) -> str:
+        """
+        根据配置构造 Redis URL。
+        """
+
+        if self.REDIS_PASSWORD is not None:
+            password = (
+                self.REDIS_PASSWORD
+                .get_secret_value()
+            )
+
+            return (
+                f"redis://:{password}@"
+                f"{self.REDIS_HOST}:"
+                f"{self.REDIS_PORT}/"
+                f"{self.REDIS_DB}"
+            )
+
+        return (
+            f"redis://"
+            f"{self.REDIS_HOST}:"
+            f"{self.REDIS_PORT}/"
+            f"{self.REDIS_DB}"
+        )
+
     # ========================================================
     # OpenAlex
     # ========================================================
@@ -323,6 +348,21 @@ class Settings(BaseSettings):
     # Research Agent 当前限制 50，避免单请求过大。
     OPENALEX_MAX_PAGE_SIZE: int = 50
 
+
+    # ========================================================
+    # Redis
+    # ========================================================
+
+    REDIS_HOST: str = "localhost"
+
+    REDIS_PORT: int = 6379
+
+    REDIS_DB: int = 0
+
+    REDIS_PASSWORD: Optional[SecretStr] = None
+
+    # 多数据源论文搜索缓存时间。
+    PAPER_SEARCH_CACHE_TTL_SECONDS: int = 300
 
 # ============================================================
 # ★ 非常重要：创建全局 Settings 实例

@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI
-
+from backend.app.core.redis import (
+    create_redis_client,
+)
 from backend.app.api.router import api_router
 from backend.app.core.config import settings
 from backend.app.core.exceptions import (
@@ -70,7 +72,16 @@ async def lifespan(app: FastAPI):
         client=app.state.http_client
     )
 
+    # Redis Client 与 Application 生命周期一致。
+    app.state.redis = create_redis_client()
+
+    # 启动阶段确认 Redis 可以访问。
+    await app.state.redis.ping()
+
     yield
+
+    # Shutdown
+    await app.state.redis.aclose()
 
     # 关闭 HTTP 连接池。
     await app.state.http_client.aclose()

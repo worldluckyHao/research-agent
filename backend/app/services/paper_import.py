@@ -833,3 +833,33 @@ async def run_paper_import_job(
 
 
                 await db.commit()
+
+class PaperImportService:
+    """
+    负责将外部论文元数据导入系统。
+    """
+
+    def __init__(
+        self,
+        session: AsyncSession,
+    ):
+        self.session = session
+
+    async def import_paper(
+        self,
+        request: PaperImportRequest,
+    ):
+        """
+        执行论文导入流程。
+
+        当前阶段：
+        1. 接收统一论文元数据
+        2. 后续执行论文查重
+        3. 创建或复用 Paper
+        4. 可选关联 Research Project
+        """
+
+        paper_data: UnifiedPaperMetadata = request.paper
+
+        # Day21 后续实现数据库导入逻辑
+        return paper_data

@@ -33,6 +33,12 @@ from backend.app.schemas.external import (
     UnifiedPaperMetadata,
     UnifiedPaperSearchResponse,
 )
+from backend.app.core.config import settings
+from backend.app.services.cache_service import (
+    CacheService,
+)
+
+
 
 def _extract_authors(
     work: dict,
@@ -565,3 +571,95 @@ async def search_multiple_providers(
             :limit
         ],
     )
+
+async def search_multiple_providers_cached(
+    cache_service: CacheService,
+    provider_map: dict[str, PaperProvider],
+    selected_providers: list[str],
+    query: str,
+    limit: int,
+    sort: PaperSearchSort,
+) -> MultiSourcePaperSearchResponse:
+    """
+    Redis Cache-Aside 多源论文搜索。
+
+    Cache HIT：
+        直接返回缓存。
+
+    Cache MISS：
+        调用真实 Provider Search，
+        然后把结果写入 Redis。
+    """
+
+    # 参与 Cache Identity 的参数。
+    cache_payload = {
+        "query": query.strip().lower(),
+
+        # Provider 参数顺序不应该影响结果身份。
+        "providers": sorted(
+            selected_providers
+        ),
+
+        "limit": limit,
+
+        "sort": sort.value,
+    }
+
+
+    cache_key = CacheService.build_key(
+        namespace="paper-search",
+        payload=cache_payload,
+    )
+
+
+    # ========================================================
+    # 1. Cache Read
+    # ========================================================
+
+    cached_data = await cache_service.get_json(
+        cache_key
+    )
+
+
+    if cached_data is not None:
+
+        return (
+            MultiSourcePaperSearchResponse
+            .model_validate(
+                cached_data
+            )
+        )
+
+
+    # ========================================================
+    # 2. Cache Miss -> Real Search
+    # ========================================================
+
+    result = await search_multiple_providers(
+        provider_map=provider_map,
+        selected_providers=selected_providers,
+        query=query,
+        limit=limit,
+        sort=sort,
+    )
+
+
+    # ========================================================
+    # 3. Cache Write
+    # ========================================================
+
+    await cache_service.set_json(
+        key=cache_key,
+
+        value=result.model_dump(
+            mode="json"
+        ),
+
+        ttl_seconds=(
+            settings
+            .PAPER_SEARCH_CACHE_TTL_SECONDS
+        ),
+    )
+
+
+    return result

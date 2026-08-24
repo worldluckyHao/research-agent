@@ -20,8 +20,11 @@ from backend.app.dependencies import (
     get_arxiv_client,
     get_arxiv_provider,
     get_crossref_provider,
+    get_current_user,
+    get_db,
     get_http_client,
     get_openalex_provider,
+    get_redis,
 )
 from backend.app.schemas.external import (
     ArxivPaperResponse,
@@ -61,7 +64,9 @@ from backend.app.schemas.external import (
 from backend.app.services import (
     paper_import,
 )
+import redis.asyncio as redis
 
+from backend.app.services.cache_service import CacheService
 
 router = APIRouter(
     prefix="/external",
@@ -337,6 +342,9 @@ async def search_papers_multi_source(
     crossref_provider: CrossrefProvider = Depends(
         get_crossref_provider
     ),
+    redis_client: redis.Redis = Depends(
+        get_redis
+    ),
 ):
     """
     多数据源统一论文搜索。
@@ -368,8 +376,12 @@ async def search_papers_multi_source(
         "crossref": crossref_provider,
     }
 
+    cache_service = CacheService(
+        redis_client=redis_client
+    )
 
-    return await external_paper.search_multiple_providers(
+    return await external_paper.search_multiple_providers_cached(
+        cache_service=cache_service,
         provider_map=provider_map,
         selected_providers=selected_providers,
         query=query,
