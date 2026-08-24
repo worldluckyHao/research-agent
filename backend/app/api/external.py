@@ -5,9 +5,11 @@ from typing import (
 import httpx
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     Path,
     Query,
+    status,
 )
 
 from backend.app.clients.arxiv import (
@@ -44,6 +46,20 @@ from backend.app.schemas.external import (
     UnifiedPaperMetadata,
     UnifiedPaperSearchResponse,
     MultiSourcePaperSearchResponse,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.dependencies import (
+    get_current_user,
+    get_db,
+)
+from backend.app.models.user import User
+from backend.app.schemas.external import (
+    PaperImportJobResponse,
+    PaperImportRequest,
+)
+from backend.app.services import (
+    paper_import,
 )
 
 
@@ -359,4 +375,90 @@ async def search_papers_multi_source(
         query=query,
         limit=limit,
         sort=sort,
+    )
+
+# ============================================================
+# Paper Import Jobs
+# ============================================================
+
+@router.post(
+    "/papers/import-jobs",
+    response_model=PaperImportJobResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def create_paper_import_job(
+    request_data: PaperImportRequest,
+
+    background_tasks: BackgroundTasks,
+
+    db: AsyncSession = Depends(
+        get_db
+    ),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    """
+    创建论文导入 Job。
+
+    API 立即返回 202，
+    实际数据库导入由 BackgroundTasks 执行。
+    """
+
+    # 如果要求加入 Project，
+    # 在返回 202 前先检查权限。
+    if request_data.project_id is not None:
+
+        from backend.app.services import (
+            research_project,
+        )
+
+        await research_project.get_owned_project(
+            db=db,
+            project_id=request_data.project_id,
+            user_id=current_user.id,
+        )
+
+
+    # 先把 Job 保存到 PostgreSQL。
+    job = await paper_import.create_import_job(
+        db=db,
+        user_id=current_user.id,
+        request_data=request_data,
+    )
+
+
+    # Response 返回之后执行。
+    background_tasks.add_task(
+        paper_import.run_paper_import_job,
+        job.id,
+    )
+
+
+    return job
+
+@router.get(
+    "/papers/import-jobs/{job_id}",
+    response_model=PaperImportJobResponse,
+)
+async def get_paper_import_job(
+    job_id: str,
+
+    db: AsyncSession = Depends(
+        get_db
+    ),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    """
+    查询当前用户自己的 Import Job。
+    """
+
+    return await paper_import.get_import_job(
+        db=db,
+        job_id=job_id,
+        user_id=current_user.id,
     )

@@ -325,6 +325,19 @@ class ExternalServiceRateLimitedException(AppException):
             status_code=503,
         )
 
+class PaperImportJobNotFoundException(AppException):
+    """
+    Import Job 不存在，
+    或者当前用户无权查看该 Job。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="PAPER_IMPORT_JOB_NOT_FOUND",
+            message="Paper import job not found",
+            status_code=404,
+        )
+
 # ============================================================
 # 统一业务异常 Handler
 # ============================================================

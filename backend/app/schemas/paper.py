@@ -146,6 +146,24 @@ class PaperResponse(BaseModel):
 
     updated_at: datetime
 
+    arxiv_id: Optional[str] = None
+
+    pdf_url: Optional[str] = None
+
+    sources: list[str] = Field(
+        default_factory=list
+    )
+
+    external_ids: dict[str, str] = Field(
+        default_factory=dict
+    )
+
+    venue: Optional[str] = None
+
+    cited_by_count: int = 0
+
+    is_open_access: Optional[bool] = None
+
 class PaperListResponse(BaseModel):
     items: list[PaperResponse]
 

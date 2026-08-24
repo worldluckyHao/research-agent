@@ -2,7 +2,11 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+)
 
 
 # ============================================================
@@ -210,3 +214,44 @@ class MultiSourcePaperSearchResponse(BaseModel):
     unique_count: int
 
     items: list[UnifiedPaperMetadata]
+
+# ============================================================
+# Paper Import
+# ============================================================
+
+class PaperImportRequest(BaseModel):
+    """
+    将 Day19 产生的 Canonical Paper
+    提交给 Import Pipeline。
+
+    project_id 可选：
+    如果提供，导入成功后会自动加入该项目。
+    """
+
+    paper: UnifiedPaperMetadata
+
+    project_id: Optional[int] = None
+
+
+class PaperImportJobResponse(BaseModel):
+    """
+    Import Job 状态。
+    """
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+    id: str
+
+    status: str
+
+    project_id: Optional[int] = None
+
+    paper_id: Optional[int] = None
+
+    error_message: Optional[str] = None
+
+    created_at: datetime
+
+    updated_at: datetime

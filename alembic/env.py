@@ -12,7 +12,9 @@ from backend.app.models.associations import (
 )
 from backend.app.models.paper import Paper
 from backend.app.models.user import User
-
+from backend.app.models.paper_import_job import (
+    PaperImportJob,
+)
 config = context.config
 
 
