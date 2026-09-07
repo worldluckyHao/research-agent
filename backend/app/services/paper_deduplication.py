@@ -455,7 +455,6 @@ def merge_papers(
             else secondary.is_open_access
         )
 
-
     return UnifiedPaperMetadata(
         # 保留 primary 作为主要 Provider。
         provider=primary.provider,
@@ -544,7 +543,6 @@ def deduplicate_and_merge(
         UnifiedPaperMetadata
     ] = []
 
-
     for candidate in papers:
 
         matched_index = None
@@ -560,7 +558,6 @@ def deduplicate_and_merge(
                 matched_index = index
                 break
 
-
         # 没有重复记录。
         if matched_index is None:
             unique_papers.append(
@@ -568,7 +565,6 @@ def deduplicate_and_merge(
             )
 
             continue
-
 
         # 已经找到对应实体：
         # 做 Metadata Fusion。
@@ -580,6 +576,5 @@ def deduplicate_and_merge(
             ],
             candidate,
         )
-
 
     return unique_papers

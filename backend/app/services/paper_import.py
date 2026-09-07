@@ -795,21 +795,21 @@ async def run_paper_import_job(
                 created,
             )
 
-
         except Exception:
 
-            # 当前 Transaction 如果有问题先 rollback。
+            # 当前 Transaction 如果失败，先回滚。
             await db.rollback()
 
 
             logger.exception(
-                "Paper import job failed: job_id=%s",
+                "Paper import job failed: "
+                "job_id=%s",
                 job_id,
             )
 
 
-            # rollback 后重新查 Job，
-            # 确保得到新的持久化状态。
+            # 重新查询 Job，
+            # 防止 rollback 后 ORM 状态不可靠。
             result = await db.execute(
                 select(PaperImportJob).where(
                     PaperImportJob.id == job_id
@@ -826,13 +826,19 @@ async def run_paper_import_job(
 
                 failed_job.status = "failed"
 
-                # 不把 DB Traceback 或 Secret 暴露给前端。
                 failed_job.error_message = (
                     "Paper import failed"
                 )
 
 
                 await db.commit()
+
+
+            # Day22：
+            # 重新抛出异常，
+            # 让 Celery 能感知任务失败，
+            # 并根据异常类型决定是否 Retry。
+            raise
 
 class PaperImportService:
     """

@@ -307,7 +307,19 @@ class Settings(BaseSettings):
     @property
     def REDIS_URL(self) -> str:
         """
-        根据配置构造 Redis URL。
+        Day21 Cache Redis URL。
+        """
+
+        return self._build_redis_url(
+            self.REDIS_DB
+        )
+
+    def _build_redis_url(
+        self,
+        db: int,
+    ) -> str:
+        """
+        为指定 Redis DB 构造连接 URL。
         """
 
         if self.REDIS_PASSWORD is not None:
@@ -320,14 +332,36 @@ class Settings(BaseSettings):
                 f"redis://:{password}@"
                 f"{self.REDIS_HOST}:"
                 f"{self.REDIS_PORT}/"
-                f"{self.REDIS_DB}"
+                f"{db}"
             )
 
         return (
             f"redis://"
             f"{self.REDIS_HOST}:"
             f"{self.REDIS_PORT}/"
-            f"{self.REDIS_DB}"
+            f"{db}"
+        )
+
+
+    @property
+    def CELERY_BROKER_URL(self) -> str:
+        """
+        Celery Broker Redis URL。
+        """
+
+        return self._build_redis_url(
+            self.CELERY_BROKER_DB
+        )
+
+
+    @property
+    def CELERY_RESULT_BACKEND_URL(self) -> str:
+        """
+        Celery Result Backend Redis URL。
+        """
+
+        return self._build_redis_url(
+            self.CELERY_RESULT_DB
         )
 
     # ========================================================
@@ -363,6 +397,19 @@ class Settings(BaseSettings):
 
     # 多数据源论文搜索缓存时间。
     PAPER_SEARCH_CACHE_TTL_SECONDS: int = 300
+
+    # ========================================================
+    # Celery
+    # ========================================================
+
+    # Broker 使用 Redis DB 1。
+    CELERY_BROKER_DB: int = 1
+
+    # Result Backend 使用 Redis DB 2。
+    CELERY_RESULT_DB: int = 2
+
+    # Task result 保存时间。
+    CELERY_RESULT_EXPIRES_SECONDS: int = 3600
 
 # ============================================================
 # ★ 非常重要：创建全局 Settings 实例

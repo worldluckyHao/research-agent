@@ -11,7 +11,9 @@ from fastapi import (
     Query,
     status,
 )
-
+from backend.app.tasks.paper_import import (
+    run_paper_import_task,
+)
 from backend.app.clients.arxiv import (
     ArxivClient,
 )
@@ -401,8 +403,6 @@ async def search_papers_multi_source(
 async def create_paper_import_job(
     request_data: PaperImportRequest,
 
-    background_tasks: BackgroundTasks,
-
     db: AsyncSession = Depends(
         get_db
     ),
@@ -414,12 +414,16 @@ async def create_paper_import_job(
     """
     创建论文导入 Job。
 
-    API 立即返回 202，
-    实际数据库导入由 BackgroundTasks 执行。
+    API 只负责：
+    1. 校验权限
+    2. 持久化 Job
+    3. 将任务发送给 Celery
+
+    真正论文导入由独立 Worker 执行。
     """
 
-    # 如果要求加入 Project，
-    # 在返回 202 前先检查权限。
+    # 如果指定 Project，
+    # 创建任务前先执行权限校验。
     if request_data.project_id is not None:
 
         from backend.app.services import (
@@ -433,7 +437,7 @@ async def create_paper_import_job(
         )
 
 
-    # 先把 Job 保存到 PostgreSQL。
+    # 先持久化业务 Job。
     job = await paper_import.create_import_job(
         db=db,
         user_id=current_user.id,
@@ -441,10 +445,9 @@ async def create_paper_import_job(
     )
 
 
-    # Response 返回之后执行。
-    background_tasks.add_task(
-        paper_import.run_paper_import_job,
-        job.id,
+    # 把轻量 job_id 发布到 Redis Broker。
+    run_paper_import_task.delay(
+        job.id
     )
 
 
