@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from backend.app.api import (
     auth,
+    documents,
     external,
     papers,
     projects,
@@ -21,6 +22,10 @@ api_router.include_router(
 
 api_router.include_router(
     papers.router
+)
+
+api_router.include_router(
+    documents.router
 )
 
 api_router.include_router(

@@ -76,3 +76,6 @@ Thumbs.db
 
 *.tmp
 *.temp
+
+# Local uploaded files
+backend/storage/

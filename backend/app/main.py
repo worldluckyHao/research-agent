@@ -14,7 +14,9 @@ from backend.app.core.exceptions import (
 from backend.app.core.logging import setup_logging
 from backend.app.db.session import engine
 from backend.app.clients.arxiv import ArxivClient
-
+from backend.app.storage.factory import (
+    create_storage_backend,
+)
 # ============================================================
 # 初始化日志系统
 # ============================================================
@@ -77,6 +79,14 @@ async def lifespan(app: FastAPI):
 
     # 启动阶段确认 Redis 可以访问。
     await app.state.redis.ping()
+
+    # File Storage Backend。
+    #
+    # Day23 当前是 LocalStorage，
+    # 后续可以切换 S3 / MinIO。
+    app.state.storage = (
+        create_storage_backend()
+    )
 
     yield
 

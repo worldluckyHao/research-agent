@@ -8,7 +8,12 @@ from backend.app.models.paper_import_job import (
 from backend.app.models.project_paper import ProjectPaper
 from backend.app.models.research_project import ResearchProject
 from backend.app.models.user import User
-
+from backend.app.models.paper_document import (
+    PaperDocument,
+)
+from backend.app.models.paper_document_page import (
+    PaperDocumentPage,
+)
 
 __all__ = [
     "Paper",
@@ -17,4 +22,6 @@ __all__ = [
     "ResearchProject",
     "User",
     "user_saved_papers",
+    "PaperDocument",
+    "PaperDocumentPage",
 ]

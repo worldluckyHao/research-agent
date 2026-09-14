@@ -428,3 +428,72 @@ async def unhandled_exception_handler(
             "message": "Internal server error",
         },
     )
+
+class PaperDocumentPaperUnavailableException(
+    AppException
+):
+    """
+    Paper 不存在或当前用户无权访问。
+
+    统一返回 404，
+    避免暴露其他用户 Paper 是否存在。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="PAPER_NOT_AVAILABLE",
+            message="Paper not found",
+            status_code=404,
+        )
+
+
+class PaperDocumentNotFoundException(
+    AppException
+):
+    """Paper Document 不存在。"""
+
+    def __init__(self):
+        super().__init__(
+            code="PAPER_DOCUMENT_NOT_FOUND",
+            message="Paper document not found",
+            status_code=404,
+        )
+
+
+class UnsupportedPaperDocumentException(
+    AppException
+):
+    """上传的文件不是合法 PDF。"""
+
+    def __init__(self):
+        super().__init__(
+            code="UNSUPPORTED_PAPER_DOCUMENT",
+            message="Only valid PDF files are supported",
+            status_code=415,
+        )
+
+
+class PaperDocumentTooLargeException(
+    AppException
+):
+    """PDF 超过大小限制。"""
+
+    def __init__(self):
+        super().__init__(
+            code="PAPER_DOCUMENT_TOO_LARGE",
+            message="PDF file exceeds the size limit",
+            status_code=413,
+        )
+
+
+class PaperDocumentStorageException(
+    AppException
+):
+    """Storage 中对应文件异常。"""
+
+    def __init__(self):
+        super().__init__(
+            code="PAPER_DOCUMENT_STORAGE_ERROR",
+            message="Paper document storage error",
+            status_code=500,
+        )

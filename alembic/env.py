@@ -15,6 +15,12 @@ from backend.app.models.user import User
 from backend.app.models.paper_import_job import (
     PaperImportJob,
 )
+from backend.app.models.paper_document import (
+    PaperDocument,
+)
+from backend.app.models.paper_document_page import (
+    PaperDocumentPage,
+)
 config = context.config
 
 
@@ -71,6 +77,8 @@ def run_migrations_online() -> None:
     asyncio.run(
         run_async_migrations()
     )
+
+
 
 
 if context.is_offline_mode():

@@ -36,6 +36,9 @@ from backend.app.providers.arxiv import (
 from backend.app.providers.crossref import (
     CrossrefProvider,
 )
+from backend.app.storage.base import (
+    StorageBackend,
+)
 
 # ============================================================
 # Database Dependency
@@ -290,3 +293,12 @@ def get_redis(
     """
 
     return request.app.state.redis
+
+def get_storage_backend(
+    request: Request,
+) -> StorageBackend:
+    """
+    获取 Application 级 Storage Backend。
+    """
+
+    return request.app.state.storage

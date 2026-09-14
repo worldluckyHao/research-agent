@@ -250,3 +250,15 @@ class Paper(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+    # --------------------------------------------------------
+    # Paper Documents
+    # --------------------------------------------------------
+
+    documents: Mapped[
+        list["PaperDocument"]
+    ] = relationship(
+        back_populates="paper",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )

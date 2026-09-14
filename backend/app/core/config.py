@@ -364,6 +364,37 @@ class Settings(BaseSettings):
             self.CELERY_RESULT_DB
         )
 
+    @property
+    def LOCAL_STORAGE_PATH(self) -> Path:
+        """
+        本地 Storage 的绝对路径。
+
+        BASE_DIR 当前指向 backend/，
+        所以默认结果类似：
+
+        F:/PycharmProjects/research-agent/backend/storage
+        """
+
+        return (
+            BASE_DIR
+            / self.LOCAL_STORAGE_DIR
+        ).resolve()
+
+
+    @property
+    def PDF_MAX_SIZE_BYTES(self) -> int:
+        """
+        将 MB 转换成字节。
+
+        Storage 层最终使用 bytes 判断文件大小。
+        """
+
+        return (
+            self.PDF_MAX_SIZE_MB
+            * 1024
+            * 1024
+        )
+
     # ========================================================
     # OpenAlex
     # ========================================================
@@ -410,6 +441,34 @@ class Settings(BaseSettings):
 
     # Task result 保存时间。
     CELERY_RESULT_EXPIRES_SECONDS: int = 3600
+
+    # ========================================================
+    # File Storage
+    # ========================================================
+
+    # Day23 当前实现本地文件存储。
+    # 后续可以扩展为 s3 / minio。
+    STORAGE_BACKEND: Literal["local"] = "local"
+
+    # 相对于 backend/ 的目录。
+    LOCAL_STORAGE_DIR: str = "storage"
+
+    # 单个 PDF 最大 50 MB。
+    PDF_MAX_SIZE_MB: int = 50
+
+    # 文件流式读写块大小：1 MB。
+    STORAGE_CHUNK_SIZE_BYTES: int = 1024 * 1024
+
+    # ========================================================
+    # PDF Parsing
+    # ========================================================
+
+    # Day24 当前使用 PyMuPDF。
+    PDF_PARSER: Literal["pymupdf"] = "pymupdf"
+
+    # 单页为空时仍保留 Page Record，
+    # 保证 page_number 不发生错位。
+    PDF_KEEP_EMPTY_PAGES: bool = True
 
 # ============================================================
 # ★ 非常重要：创建全局 Settings 实例
