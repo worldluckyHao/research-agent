@@ -10,7 +10,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
     Text,
-    Integer,
+    Integer, Boolean,
 )
 from sqlalchemy.orm import (
     Mapped,
@@ -47,16 +47,16 @@ class PaperDocument(Base):
 
         CheckConstraint(
             (
-                "status IN "
-                "('uploaded', "
+                "embedding_status IN "
+                "('pending', "
                 "'queued', "
-                "'parsing', "
-                "'parsed', "
+                "'embedding', "
+                "'embedded', "
                 "'failed')"
             ),
             name=(
                 "ck_paper_documents_"
-                "status"
+                "chunk_status"
             ),
         ),
 
@@ -175,6 +175,14 @@ class PaperDocument(Base):
         ),
     )
 
+    chunks: Mapped[
+        list["PaperDocumentChunk"]
+    ] = relationship(
+        back_populates="document",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     # --------------------------------------------------------
     # PDF Parsing Metadata
     # --------------------------------------------------------
@@ -212,6 +220,142 @@ class PaperDocument(Base):
 
 
     parsed_at: Mapped[
+        Optional[datetime]
+    ] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # --------------------------------------------------------
+    # Text Chunking Metadata
+    # --------------------------------------------------------
+
+    chunk_status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        server_default="pending",
+        index=True,
+    )
+
+
+    chunk_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+
+    chunker_name: Mapped[
+        Optional[str]
+    ] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+
+    chunker_version: Mapped[
+        Optional[str]
+    ] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+
+    chunk_size_tokens: Mapped[
+        Optional[int]
+    ] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+
+    chunk_overlap_tokens: Mapped[
+        Optional[int]
+    ] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+
+    chunk_error: Mapped[
+        Optional[str]
+    ] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+
+    chunked_at: Mapped[
+        Optional[datetime]
+    ] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # --------------------------------------------------------
+    # Embedding Metadata
+    # --------------------------------------------------------
+
+    embedding_status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        server_default="pending",
+        index=True,
+    )
+
+
+    embedding_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+
+    embedding_provider: Mapped[
+        Optional[str]
+    ] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+
+    embedding_model: Mapped[
+        Optional[str]
+    ] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+
+    embedding_dimension: Mapped[
+        Optional[int]
+    ] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+
+    embedding_normalized: Mapped[
+        Optional[bool]
+    ] = mapped_column(
+        Boolean,
+        nullable=True,
+    )
+
+
+    embedding_error: Mapped[
+        Optional[str]
+    ] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+
+    embedded_at: Mapped[
         Optional[datetime]
     ] = mapped_column(
         DateTime(timezone=True),

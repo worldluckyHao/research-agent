@@ -13,6 +13,8 @@ celery_app = Celery(
     include=[
         "backend.app.tasks.paper_import",
         "backend.app.tasks.document_parse",
+        "backend.app.tasks.document_chunk",
+        "backend.app.tasks.document_embed",
     ]
 )
 

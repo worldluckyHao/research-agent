@@ -52,6 +52,38 @@ class PaperDocumentResponse(BaseModel):
 
     parsed_at: Optional[datetime] = None
 
+    chunk_status: str
+
+    chunk_count: int
+
+    chunker_name: Optional[str] = None
+
+    chunker_version: Optional[str] = None
+
+    chunk_size_tokens: Optional[int] = None
+
+    chunk_overlap_tokens: Optional[int] = None
+
+    chunk_error: Optional[str] = None
+
+    chunked_at: Optional[datetime] = None
+
+    embedding_status: str
+
+    embedding_count: int
+
+    embedding_provider: Optional[str] = None
+
+    embedding_model: Optional[str] = None
+
+    embedding_dimension: Optional[int] = None
+
+    embedding_normalized: Optional[bool] = None
+
+    embedding_error: Optional[str] = None
+
+    embedded_at: Optional[datetime] = None
+
 
 class PaperDocumentListResponse(BaseModel):
     """
@@ -94,6 +126,54 @@ class PaperDocumentPageListResponse(
 
     items: list[
         PaperDocumentPageResponse
+    ]
+
+    total: int
+
+    page: int
+
+    page_size: int
+
+class PaperDocumentChunkResponse(
+    BaseModel
+):
+    """
+    Document Chunk Response。
+    """
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+    id: int
+
+    document_id: int
+
+    chunk_index: int
+
+    content: str
+
+    start_page: int
+
+    end_page: int
+
+    token_count: int
+
+    char_count: int
+
+    content_sha256: str
+
+
+class PaperDocumentChunkListResponse(
+    BaseModel
+):
+    """
+    Chunk 分页结果。
+    """
+
+    items: list[
+        PaperDocumentChunkResponse
     ]
 
     total: int

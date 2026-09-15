@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.6-pg18
+    container_name: research-agent-postgres
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: research_agent
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - research_agent_pgdata:/var/lib/postgresql
+
+    restart: unless-stopped
+
+volumes:
+  research_agent_pgdata:

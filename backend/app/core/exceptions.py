@@ -497,3 +497,145 @@ class PaperDocumentStorageException(
             message="Paper document storage error",
             status_code=500,
         )
+
+class PaperDocumentNotParsedException(
+    AppException
+):
+    """
+    Document 尚未完成 PDF Parsing，
+    不能进行 Chunking。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="PAPER_DOCUMENT_NOT_PARSED",
+            message=(
+                "Paper document must be "
+                "parsed before chunking"
+            ),
+            status_code=409,
+        )
+
+
+class PaperDocumentNotChunkedException(
+    AppException
+):
+    """
+    Document 尚未完成 Chunking。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code=(
+                "PAPER_DOCUMENT_NOT_CHUNKED"
+            ),
+            message=(
+                "Paper document must be "
+                "chunked before embedding"
+            ),
+            status_code=409,
+        )
+
+
+class EmbeddingInputTooLongException(
+    AppException
+):
+    """
+    Chunk 超过当前 Embedding Model
+    能接受的最大输入长度。
+    """
+
+    def __init__(
+        self,
+        actual_tokens: int,
+        max_tokens: int,
+    ):
+        super().__init__(
+            code="EMBEDDING_INPUT_TOO_LONG",
+            message=(
+                "Embedding input exceeds "
+                "model context limit: "
+                f"{actual_tokens} > "
+                f"{max_tokens}"
+            ),
+            status_code=422,
+        )
+
+
+class EmbeddingConfigurationException(
+    AppException
+):
+    """
+    Embedding Model 配置与代码
+    不一致。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code=(
+                "EMBEDDING_CONFIGURATION_ERROR"
+            ),
+            message=(
+                "Embedding model "
+                "configuration error"
+            ),
+            status_code=500,
+        )
+
+class DocumentEmbeddingNotReadyException(
+    AppException
+):
+    """
+    当前 Document 尚未完成 Chunking，
+    无法执行持久化 Embedding。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code=(
+                "DOCUMENT_EMBEDDING_NOT_READY"
+            ),
+            message=(
+                "Document must be chunked "
+                "before embedding"
+            ),
+            status_code=409,
+        )
+
+class DocumentEmbeddingNotAvailableException(
+    AppException
+):
+    """
+    Document 尚未完成 Embedding，
+    无法执行 Semantic Retrieval。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code=(
+                "DOCUMENT_EMBEDDING_NOT_AVAILABLE"
+            ),
+            message=(
+                "Document embeddings are "
+                "not available"
+            ),
+            status_code=409,
+        )
+
+
+class SemanticSearchUnavailableException(
+    AppException
+):
+    """
+    Semantic Search 内部状态异常。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="SEMANTIC_SEARCH_UNAVAILABLE",
+            message=(
+                "Semantic search is "
+                "currently unavailable"
+            ),
+            status_code=503,
+        )

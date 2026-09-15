@@ -21,6 +21,12 @@ from backend.app.models.paper_document import (
 from backend.app.models.paper_document_page import (
     PaperDocumentPage,
 )
+from backend.app.models.paper_document_chunk import (
+    PaperDocumentChunk,
+)
+from backend.app.models.paper_document_chunk_embedding import (
+    PaperDocumentChunkEmbedding,
+)
 config = context.config
 
 

@@ -395,6 +395,30 @@ class Settings(BaseSettings):
             * 1024
         )
 
+    @property
+    def CHUNK_STRIDE_TOKENS(self) -> int:
+        """
+        Chunk 滑动窗口步长。
+
+        stride = chunk_size - overlap
+
+        默认：
+        800 - 120 = 680
+        """
+
+        stride = (
+            self.CHUNK_SIZE_TOKENS
+            - self.CHUNK_OVERLAP_TOKENS
+        )
+
+        if stride <= 0:
+            raise ValueError(
+                "CHUNK_OVERLAP_TOKENS must "
+                "be smaller than CHUNK_SIZE_TOKENS"
+            )
+
+        return stride
+
     # ========================================================
     # OpenAlex
     # ========================================================
@@ -469,6 +493,156 @@ class Settings(BaseSettings):
     # 单页为空时仍保留 Page Record，
     # 保证 page_number 不发生错位。
     PDF_KEEP_EMPTY_PAGES: bool = True
+
+    # ========================================================
+    # Text Chunking
+    # ========================================================
+
+    # Day25 默认使用 Token Window Chunker。
+    CHUNKER_NAME: Literal["token_window"] = "token_window"
+
+    # tiktoken 编码器。
+    CHUNK_TOKENIZER_NAME: str = "cl100k_base"
+
+    # 每个 Chunk 的目标 Token 数。
+    #
+    # Day26 调整为 384，
+    # 为 Embedding Model 的实际 tokenizer
+    # 留出输入长度安全空间。
+    CHUNK_SIZE_TOKENS: int = 384
+
+    # 相邻 Chunk 保留一定上下文。
+    CHUNK_OVERLAP_TOKENS: int = 64
+
+    # ========================================================
+    # Embedding
+    # ========================================================
+
+    # 当前使用本地 Sentence Transformer。
+    EMBEDDING_PROVIDER: Literal[
+        "sentence_transformer"
+    ] = "sentence_transformer"
+
+    # 多语言 E5。
+    EMBEDDING_MODEL_NAME: str = (
+        "intfloat/multilingual-e5-small"
+    )
+
+    # auto:
+    # CUDA 可用时使用 GPU，
+    # 否则使用 CPU。
+    EMBEDDING_DEVICE: str = "auto"
+
+    # 每批一次送入模型多少 Chunk。
+    EMBEDDING_BATCH_SIZE: int = 32
+
+    # E5-small 输出维度。
+    #
+    # Day27 pgvector 会直接使用这个值。
+    EMBEDDING_DIMENSION: int = 384
+
+    # 是否归一化到单位向量。
+    EMBEDDING_NORMALIZE: bool = True
+
+    # 不允许模型悄悄截断 Chunk。
+    # 输入过长时直接报错，
+    # 便于及时调整 Chunk 策略。
+    EMBEDDING_REJECT_TRUNCATION: bool = True
+
+    # Swagger Preview 最多一次计算几个 Chunk。
+    EMBEDDING_PREVIEW_MAX_CHUNKS: int = 10
+
+    # ========================================================
+    # Vector Persistence
+    # ========================================================
+
+    # 一个 Document 的 Embedding Job
+    # 每批读取多少 Chunk。
+    EMBEDDING_JOB_BATCH_SIZE: int = 64
+
+    # HNSW Index 参数。
+    #
+    # m：
+    # 每个节点构建多少连接。
+    VECTOR_HNSW_M: int = 16
+
+    # 构建索引时的搜索宽度。
+    VECTOR_HNSW_EF_CONSTRUCTION: int = 64
+
+    # ========================================================
+    # Semantic Retrieval
+    # ========================================================
+
+    # 默认返回最相关的 5 个 Chunk。
+    RETRIEVAL_DEFAULT_TOP_K: int = 5
+
+    # 单次最大返回数量，
+    # 防止客户端一次请求大量 Chunk。
+    RETRIEVAL_MAX_TOP_K: int = 20
+
+    # 默认最低相似度。
+    #
+    # 0 表示默认不进行硬过滤，
+    # Day44 RAG Evaluation 后再根据实验调整。
+    RETRIEVAL_DEFAULT_MIN_SCORE: float = 0.0
+
+    # Query 最大长度。
+    RETRIEVAL_MAX_QUERY_LENGTH: int = 1000
+
+    # ========================================================
+    # Hybrid Retrieval
+    # ========================================================
+
+    # Semantic Branch
+    # 第一阶段向量检索候选数。
+    HYBRID_SEMANTIC_CANDIDATES: int = 20
+
+    # Lexical Branch
+    # 第一阶段关键词候选数。
+    HYBRID_LEXICAL_CANDIDATES: int = 20
+
+    # Fusion 后最多送多少候选给 Reranker。
+    HYBRID_FUSION_CANDIDATES: int = 20
+
+    # 最终默认返回数量。
+    HYBRID_DEFAULT_TOP_K: int = 5
+
+    # 最大最终返回数量。
+    HYBRID_MAX_TOP_K: int = 20
+
+    # RRF 常数。
+    # 常用起点是 60。
+    HYBRID_RRF_K: int = 60
+
+    # PostgreSQL FTS 配置。
+    #
+    # simple 不进行英语词干化，
+    # 对 ERA5、PWformer、RMSE 等
+    # 科研专有词更加可控。
+    HYBRID_FTS_CONFIG: str = "simple"
+
+    # ========================================================
+    # Reranker
+    # ========================================================
+
+    RERANKER_ENABLED: bool = True
+
+    RERANKER_MODEL_NAME: str = (
+        "cross-encoder/"
+        "mmarco-mMiniLMv2-L12-H384-v1"
+    )
+
+    # auto:
+    # CUDA 可用 → GPU
+    # 否则 CPU。
+    RERANKER_DEVICE: str = "auto"
+
+    RERANKER_BATCH_SIZE: int = 16
+
+    # 最终 Candidate 文本过长时，
+    # CrossEncoder 会自行进行 tokenizer 截断。
+    # 由于 Day26 已经将 Chunk 控制在较小范围，
+    # 当前可以接受。
 
 # ============================================================
 # ★ 非常重要：创建全局 Settings 实例

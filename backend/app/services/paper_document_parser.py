@@ -7,7 +7,9 @@ from datetime import (
     timezone,
 )
 from pathlib import Path
-
+from backend.app.models.paper_document_chunk import (
+    PaperDocumentChunk,
+)
 import aiofiles
 from sqlalchemy import (
     delete,
@@ -310,6 +312,21 @@ async def run_document_parse_job(
                 )
             )
 
+            # =================================================
+            # Invalidate Downstream Chunk Data
+            # =================================================
+
+            # Page Text 即将被重新生成，
+            # 基于旧 Page 产生的 Chunk 已经失效。
+            await db.execute(
+                delete(
+                    PaperDocumentChunk
+                ).where(
+                    PaperDocumentChunk
+                    .document_id
+                    == document_id
+                )
+            )
 
             pages = []
 
@@ -357,6 +374,26 @@ async def run_document_parse_job(
             )
 
             document.status = "parsed"
+
+            # Parsing 成功以后，
+            # Chunking 回到待处理状态。
+            document.chunk_status = (
+                "pending"
+            )
+
+            document.chunk_count = 0
+
+            document.chunker_name = None
+
+            document.chunker_version = None
+
+            document.chunk_size_tokens = None
+
+            document.chunk_overlap_tokens = None
+
+            document.chunk_error = None
+
+            document.chunked_at = None
 
             document.parse_error = None
 

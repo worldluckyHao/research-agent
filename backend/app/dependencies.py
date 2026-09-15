@@ -39,6 +39,12 @@ from backend.app.providers.crossref import (
 from backend.app.storage.base import (
     StorageBackend,
 )
+from backend.app.embeddings.base import (
+    EmbeddingProvider,
+)
+from backend.app.embeddings.factory import (
+    create_embedding_provider,
+)
 
 # ============================================================
 # Database Dependency
@@ -302,3 +308,14 @@ def get_storage_backend(
     """
 
     return request.app.state.storage
+
+def get_embedding_provider(
+) -> EmbeddingProvider:
+    """
+    获取当前进程缓存的
+    Embedding Provider。
+    """
+
+    return (
+        create_embedding_provider()
+    )
