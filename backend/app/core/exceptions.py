@@ -639,3 +639,393 @@ class SemanticSearchUnavailableException(
             ),
             status_code=503,
         )
+
+class ResearchSessionNotFoundException(
+    AppException
+):
+    """
+    Research Session 不存在，
+    或不属于当前用户。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="RESEARCH_SESSION_NOT_FOUND",
+            message="Research session not found",
+            status_code=404,
+        )
+
+
+class ResearchConversationNotFoundException(
+    AppException
+):
+    """
+    Conversation 不存在，
+    或不属于当前用户。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="RESEARCH_CONVERSATION_NOT_FOUND",
+            message="Research conversation not found",
+            status_code=404,
+        )
+
+
+class ConversationDocumentRequiredException(
+    AppException
+):
+    """
+    当前 Conversation 没有绑定 PaperDocument，
+    不能执行 Document RAG。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="CONVERSATION_DOCUMENT_REQUIRED",
+            message=(
+                "A paper document must be attached "
+                "to this conversation before asking questions"
+            ),
+            status_code=409,
+        )
+
+class PromptNotFoundException(
+    AppException
+):
+    """
+    Prompt ID / Version 不存在。
+    """
+
+    def __init__(
+        self,
+        prompt_id: str,
+        version: int,
+    ):
+        super().__init__(
+            code="PROMPT_NOT_FOUND",
+            message=(
+                "Prompt configuration "
+                f"not found: {prompt_id} v{version}"
+            ),
+            status_code=500,
+        )
+
+
+class PromptRenderException(
+    AppException
+):
+    """
+    Prompt 渲染失败。
+    """
+
+    def __init__(self):
+        super().__init__(
+            code="PROMPT_RENDER_ERROR",
+            message="Prompt rendering failed",
+            status_code=500,
+        )
+
+class PaperComparisonProjectNotFoundException(
+    AppException
+):
+    """
+    Comparison Project 不存在
+    或不属于当前 User。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "PAPER_COMPARISON_"
+                "PROJECT_NOT_FOUND"
+            ),
+
+            message=(
+                "Research project is "
+                "not available"
+            ),
+
+            status_code=404,
+        )
+
+
+class PaperComparisonSourceNotFoundException(
+    AppException
+):
+    """
+    选择的 Paper / Document
+    不属于当前 Project，
+    或资源不存在。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "PAPER_COMPARISON_"
+                "SOURCE_NOT_FOUND"
+            ),
+
+            message=(
+                "One or more comparison "
+                "sources are not available"
+            ),
+
+            status_code=404,
+        )
+
+
+class PaperComparisonLimitException(
+    AppException
+):
+    """
+    比较论文数量超过系统限制。
+    """
+
+    def __init__(
+        self,
+        max_papers: int,
+    ):
+        super().__init__(
+            code=(
+                "PAPER_COMPARISON_"
+                "LIMIT_EXCEEDED"
+            ),
+
+            message=(
+                "Too many papers selected. "
+                f"Maximum allowed: {max_papers}"
+            ),
+
+            status_code=422,
+        )
+
+
+class PaperComparisonGenerationException(
+    AppException
+):
+    """
+    Comparison LLM 输出无法形成
+    合法结构化结果。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "PAPER_COMPARISON_"
+                "GENERATION_FAILED"
+            ),
+
+            message=(
+                "Paper comparison generation "
+                "failed"
+            ),
+
+            status_code=500,
+        )
+
+class ResearchGapEvidenceUnavailableException(
+    AppException
+):
+    """
+    当前 Comparison Evidence
+    不足以执行 Cross-Paper Gap Analysis。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "RESEARCH_GAP_"
+                "EVIDENCE_UNAVAILABLE"
+            ),
+
+            message=(
+                "Insufficient cross-paper evidence "
+                "for research gap analysis"
+            ),
+
+            status_code=409,
+        )
+
+
+class ResearchGapGenerationException(
+    AppException
+):
+    """
+    Gap Generator 输出无法解析。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "RESEARCH_GAP_"
+                "GENERATION_FAILED"
+            ),
+
+            message=(
+                "Research gap generation failed"
+            ),
+
+            status_code=500,
+        )
+
+class ResearchIdeaGapNotFoundException(
+    AppException
+):
+    """
+    selected_gap_id 不存在，
+    或当前 Gap Analysis 没有可用 Gap。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "RESEARCH_IDEA_"
+                "GAP_NOT_FOUND"
+            ),
+
+            message=(
+                "No suitable verified research gap "
+                "is available for idea generation"
+            ),
+
+            status_code=404,
+        )
+
+
+class ResearchIdeaGenerationException(
+    AppException
+):
+    """
+    Research Idea LLM 输出无法形成
+    合法结构化结果。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "RESEARCH_IDEA_"
+                "GENERATION_FAILED"
+            ),
+
+            message=(
+                "Research idea generation failed"
+            ),
+
+            status_code=500,
+        )
+
+class ResearchExperimentIdeaNotFoundException(
+    AppException
+):
+    """
+    selected_idea_id 不存在，
+    或当前 Day40 没有可用于实验设计的 Idea。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "RESEARCH_EXPERIMENT_"
+                "IDEA_NOT_FOUND"
+            ),
+
+            message=(
+                "No suitable research idea "
+                "is available for experiment design"
+            ),
+
+            status_code=404,
+        )
+
+
+class ResearchExperimentGenerationException(
+    AppException
+):
+    """
+    Experiment Designer / Critic
+    无法产生合法结构化输出。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "RESEARCH_EXPERIMENT_"
+                "GENERATION_FAILED"
+            ),
+
+            message=(
+                "Research experiment design "
+                "generation failed"
+            ),
+
+            status_code=500,
+        )
+
+
+class CodeAssistantGenerationException(
+    AppException
+):
+    """
+    Code Assistant LLM 输出
+    无法形成合法结构化结果。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "CODE_ASSISTANT_"
+                "GENERATION_FAILED"
+            ),
+
+            message=(
+                "Code assistant generation failed"
+            ),
+
+            status_code=500,
+        )
+
+
+class CodeAssistantPathViolationException(
+    AppException
+):
+    """
+    Proposal 中出现不允许的文件路径。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "CODE_ASSISTANT_"
+                "PATH_VIOLATION"
+            ),
+
+            message=(
+                "Code proposal contains "
+                "an unauthorized file path"
+            ),
+
+            status_code=422,
+        )

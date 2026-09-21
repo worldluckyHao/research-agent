@@ -644,6 +644,353 @@ class Settings(BaseSettings):
     # 由于 Day26 已经将 Chunk 控制在较小范围，
     # 当前可以接受。
 
+    # ========================================================
+    # LLM / RAG
+    # ========================================================
+
+    # Day30 默认使用本地 Hugging Face Model。
+    LLM_PROVIDER: Literal[
+        "huggingface"
+    ] = "huggingface"
+
+    # Day30 使用较小模型，
+    # 便于本地开发验证完整 RAG Pipeline。
+    LLM_MODEL_NAME: str = (
+        "Qwen/Qwen2.5-1.5B-Instruct"
+    )
+
+    # auto:
+    # CUDA 可用 → GPU
+    # 否则 CPU。
+    LLM_DEVICE: str = "auto"
+
+    # 单次回答最大生成 Token。
+    LLM_MAX_NEW_TOKENS: int = 512
+
+    # RAG 更强调稳定和事实依据，
+    # 因此默认低 Temperature。
+    LLM_TEMPERATURE: float = 0.1
+
+    # 是否启用 Sampling。
+    #
+    # Day30 默认关闭，
+    # 让答案更加稳定、可复现。
+    LLM_DO_SAMPLE: bool = False
+
+    # RAG Context 最多使用多少个 Chunk。
+    RAG_DEFAULT_TOP_K: int = 5
+
+    RAG_MAX_TOP_K: int = 10
+
+    # Context 最大字符预算。
+    #
+    # Day30 先用 Character Budget，
+    # Day32 Prompt Management 再进一步完善。
+    RAG_MAX_CONTEXT_CHARS: int = 12000
+
+    # 如果没有任何 Retrieval Result，
+    # 不调用 LLM。
+    RAG_REQUIRE_EVIDENCE: bool = True
+
+    # ========================================================
+    # LLM / RAG
+    # ========================================================
+
+    LLM_PROVIDER: Literal[
+        "huggingface"
+    ] = "huggingface"
+
+    LLM_MODEL_NAME: str = (
+        "Qwen/Qwen2.5-1.5B-Instruct"
+    )
+
+    # auto:
+    # CUDA 可用时使用 GPU，否则 CPU。
+    LLM_DEVICE: str = "auto"
+
+    # 最大生成长度。
+    LLM_MAX_NEW_TOKENS: int = 512
+
+    # RAG 需要稳定、保守回答。
+    LLM_TEMPERATURE: float = 0.1
+
+    # Day30 默认关闭随机采样。
+    LLM_DO_SAMPLE: bool = False
+
+    # 默认检索证据数量。
+    RAG_DEFAULT_TOP_K: int = 5
+
+    RAG_MAX_TOP_K: int = 10
+
+    # 最多送给 LLM 的 Evidence 字符数。
+    RAG_MAX_CONTEXT_CHARS: int = 12000
+
+    # 没有 Evidence 时直接拒答。
+    RAG_REQUIRE_EVIDENCE: bool = True
+
+    # ========================================================
+    # Prompt Management
+    # ========================================================
+
+    # 当前 RAG System Prompt 版本。
+    RAG_SYSTEM_PROMPT_VERSION: int = 1
+
+    # 当前 RAG User Prompt 版本。
+    RAG_USER_PROMPT_VERSION: int = 1
+
+
+    # ========================================================
+    # LangChain
+    # ========================================================
+
+    # RAG Generation Engine（RAG生成引擎）。
+    #
+    # native：
+    #     使用 Day30 原生实现，
+    #     直接调用 LLMProvider.generate()。
+    #
+    # langchain：
+    #     使用 Day33 LCEL Pipeline。
+    #
+    # 保留 native 方便：
+    #     1. 回滚
+    #     2. 对比
+    #     3. Debug
+    RAG_GENERATION_ENGINE: Literal[
+        "native",
+        "langchain",
+    ] = "langchain"
+
+    # ========================================================
+    # RAG Workflow Engine
+    # ========================================================
+
+    # service:
+    #     Day30-Day33 Classic RAG。
+    #
+    # langgraph:
+    #     Day34 基础 LangGraph RAG。
+    #
+    # agent:
+    #     Day35 Agentic RAG。
+    #
+    # tool_agent:
+    #     Day36 Tool Calling Agent。
+    #
+    # multi_agent:
+    #     Day37 Researcher + Critic + Synthesizer。
+    RAG_WORKFLOW_ENGINE: Literal[
+        "service",
+        "langgraph",
+        "agent",
+        "tool_agent",
+        "multi_agent",
+    ] = "multi_agent"
+
+    # ========================================================
+    # Tool Calling
+    # ========================================================
+
+    # 一次 Tool Agent Run
+    # 最多允许执行多少次 Tool。
+    #
+    # 防止：
+    # select -> execute -> rewrite
+    # 无限循环。
+    RESEARCH_AGENT_MAX_TOOL_CALLS: int = 3
+
+
+    # Tool Selector 默认版本。
+    TOOL_SELECTION_PROMPT_VERSION: int = 1
+
+
+    # ========================================================
+    # Research Agent
+    # ========================================================
+
+    # 一次问题最多进行多少次 Retrieval。
+    #
+    # 2 表示：
+    #
+    # 第一次：
+    #     initial retrieval
+    #
+    # 第二次：
+    #     rewritten query retrieval
+    #
+    # 避免 Agent 无限循环。
+    RESEARCH_AGENT_MAX_RETRIEVAL_ATTEMPTS: int = 2
+
+
+    # Agent 内部 Retrieval 可以比用户最终
+    # top_k 多取一些候选，
+    # 给 Evidence Evaluator 更多信息。
+    RESEARCH_AGENT_RETRIEVAL_TOP_K: int = 8
+
+
+    # Evidence Evaluation 最多把多少个 Chunk
+    # 发送给 Evaluator。
+    #
+    # 防止评估 Prompt 过长。
+    RESEARCH_AGENT_EVALUATION_MAX_CHUNKS: int = 5
+
+    # ========================================================
+    # Multi-Agent
+    # ========================================================
+
+    # Researcher -> Critic
+    # 最多允许循环多少轮。
+    #
+    # Example:
+    #
+    # cycle 1:
+    #     researcher
+    #     critic rejects
+    #
+    # cycle 2:
+    #     researcher
+    #     critic accepts / stop
+    MULTI_AGENT_MAX_RESEARCH_CYCLES: int = 2
+
+
+    # Critic 每次最多评估多少个 Evidence Chunk。
+    #
+    # 防止 Critic Prompt 过长。
+    MULTI_AGENT_CRITIC_MAX_CHUNKS: int = 5
+
+    # ========================================================
+    # Paper Comparison
+    # ========================================================
+
+    # 一次最多比较多少篇论文。
+    #
+    # 多论文比较会为每篇论文运行一次 RAG，
+    # 数量太大会显著增加：
+    #
+    # Retrieval
+    # LLM Calls
+    # Latency
+    # GPU Memory Pressure
+    PAPER_COMPARISON_MAX_PAPERS: int = 5
+
+
+    # 每篇 Paper Evidence Extraction
+    # 使用多少个最终 Evidence Chunk。
+    PAPER_COMPARISON_PER_PAPER_TOP_K: int = 5
+
+
+    # Comparison Synthesizer Prompt Version。
+    PAPER_COMPARISON_PROMPT_VERSION: int = 1
+
+    # ========================================================
+    # Research Gap Discovery
+    # ========================================================
+
+    # 最多生成多少个 Gap Candidate。
+    #
+    # 防止 LLM 一次产生大量低质量 Gap，
+    # 同时避免 Verifier 调用次数过多。
+    RESEARCH_GAP_MAX_CANDIDATES: int = 5
+
+
+    # Gap Generator Prompt Version。
+    RESEARCH_GAP_GENERATION_PROMPT_VERSION: int = 1
+
+
+    # Gap Verifier Prompt Version。
+    RESEARCH_GAP_VERIFICATION_PROMPT_VERSION: int = 1
+
+
+    # 至少需要多少篇不同论文提供 Evidence，
+    # 才能认为存在较强的 Cross-Paper Support。
+    #
+    # 注意：
+    # 低于该值不一定 Reject，
+    # 但 Evidence Strength 会被限制。
+    RESEARCH_GAP_STRONG_SUPPORT_MIN_PAPERS: int = 3
+
+    # ========================================================
+    # Research Idea Generation
+    # ========================================================
+
+    # 一次最多生成多少个 Candidate Idea。
+    RESEARCH_IDEA_MAX_CANDIDATES: int = 3
+
+
+    # Idea Generator Prompt Version。
+    RESEARCH_IDEA_GENERATION_PROMPT_VERSION: int = 1
+
+
+    # Feasibility Critic Prompt Version。
+    RESEARCH_IDEA_FEASIBILITY_PROMPT_VERSION: int = 1
+
+
+    # Novelty Risk Critic Prompt Version。
+    RESEARCH_IDEA_NOVELTY_PROMPT_VERSION: int = 1
+
+
+    # Implementation Planner Prompt Version。
+    RESEARCH_IDEA_PLANNING_PROMPT_VERSION: int = 1
+
+    # ========================================================
+    # Experiment Design
+    # ========================================================
+
+    # Experiment Designer Prompt Version。
+    EXPERIMENT_DESIGN_PROMPT_VERSION: int = 1
+
+
+    # Experiment Design Critic Prompt Version。
+    EXPERIMENT_REVIEW_PROMPT_VERSION: int = 1
+
+
+    # 默认建议的独立训练重复次数。
+    #
+    # 注意：
+    # 最终 Agent 可以根据实验成本调整，
+    # 但这作为设计起点。
+    EXPERIMENT_DEFAULT_REPEATED_RUNS: int = 5
+
+
+    # 默认统计显著性水平。
+    EXPERIMENT_DEFAULT_ALPHA: float = 0.05
+
+    # ========================================================
+    # Code Assistant
+    # ========================================================
+
+    # Code Planning Prompt Version。
+    CODE_ASSISTANT_PLANNING_PROMPT_VERSION: int = 1
+
+
+    # Patch Proposal Prompt Version。
+    CODE_ASSISTANT_PATCH_PROMPT_VERSION: int = 1
+
+
+    # Code Safety Review Prompt Version。
+    CODE_ASSISTANT_REVIEW_PROMPT_VERSION: int = 1
+
+
+    # Validation Planning Prompt Version。
+    CODE_ASSISTANT_VALIDATION_PROMPT_VERSION: int = 1
+
+
+    # 一次最多允许生成多少个文件变更提案。
+    CODE_ASSISTANT_MAX_FILE_CHANGES: int = 8
+
+
+    # Day42 禁止建议修改的敏感路径关键词。
+    #
+    # 这里只用于 Proposal Validation，
+    # 不是真正 OS Sandbox。
+    CODE_ASSISTANT_BLOCKED_PATH_KEYWORDS: str = (
+        ".env,"
+        "secrets,"
+        "credentials,"
+        "private_key,"
+        "security/"
+    )
+
 # ============================================================
 # ★ 非常重要：创建全局 Settings 实例
 # ============================================================

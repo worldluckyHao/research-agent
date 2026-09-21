@@ -20,6 +20,10 @@ from backend.app.dependencies import (
     get_db,
     get_embedding_provider,
     get_storage_backend,
+    get_llm_provider,
+)
+from backend.app.llms.base import (
+    LLMProvider,
 )
 from backend.app.embeddings.base import (
     EmbeddingProvider,
@@ -27,6 +31,7 @@ from backend.app.embeddings.base import (
 from backend.app.schemas.embedding import (
     DocumentEmbeddingPreviewResponse,
 )
+from backend.app.schemas.rag import RAGQuestionRequest, RAGAnswerResponse
 from backend.app.schemas.semantic_search import (
     SemanticSearchRequest,
     SemanticSearchResponse,
@@ -45,6 +50,7 @@ from backend.app.services import (
     paper_document_chunker,
     paper_document_embedder,
     paper_document_parser,
+    rag_service,
     semantic_retrieval,
 )
 from backend.app.storage.base import (
@@ -1060,6 +1066,106 @@ async def hybrid_search_paper_document(
 
             embedding_provider=(
                 embedding_provider
+            ),
+        )
+    )
+
+@router.post(
+    (
+        "/{paper_id}/documents/"
+        "{document_id}/rag"
+    ),
+    response_model=(
+        RAGAnswerResponse
+    ),
+)
+async def ask_paper_document(
+    paper_id: int,
+    document_id: int,
+
+    request_data: RAGQuestionRequest,
+
+    db: AsyncSession = Depends(
+        get_db
+    ),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
+
+    embedding_provider: EmbeddingProvider = Depends(
+        get_embedding_provider
+    ),
+
+    llm_provider: LLMProvider = Depends(
+        get_llm_provider
+    ),
+):
+    """
+    Citation-Aware RAG。
+
+    Flow:
+
+        Question
+            ↓
+        Hybrid Retrieval
+            ↓
+        Evidence Context
+            ↓
+        LLM
+            ↓
+        Citation Validation
+    """
+
+    # --------------------------------------------------------
+    # 1. Authorization
+    # --------------------------------------------------------
+
+    document = (
+        await paper_document.get_document(
+            db=db,
+
+            paper_id=paper_id,
+
+            document_id=document_id,
+
+            user_id=(
+                current_user.id
+            ),
+        )
+    )
+
+
+    # --------------------------------------------------------
+    # 2. RAG
+    # --------------------------------------------------------
+
+    return (
+        await rag_service
+        .answer_document_question(
+            db=db,
+
+            document=document,
+
+            question=(
+                request_data.question
+            ),
+
+            top_k=(
+                request_data.top_k
+            ),
+
+            use_reranker=(
+                request_data
+                .use_reranker
+            ),
+
+            embedding_provider=(
+                embedding_provider
+            ),
+
+            llm_provider=(
+                llm_provider
             ),
         )
     )

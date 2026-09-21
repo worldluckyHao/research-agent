@@ -20,6 +20,15 @@ from backend.app.models.paper_document_chunk import (
 from backend.app.models.paper_document_chunk_embedding import (
     PaperDocumentChunkEmbedding,
 )
+from backend.app.models.research_session import (
+    ResearchSession,
+)
+from backend.app.models.research_conversation import (
+    ResearchConversation,
+)
+from backend.app.models.research_message import (
+    ResearchMessage,
+)
 __all__ = [
     "Paper",
     "PaperImportJob",
@@ -31,4 +40,7 @@ __all__ = [
     "PaperDocumentPage",
     "PaperDocumentChunk",
     "PaperDocumentChunkEmbedding",
+    "ResearchSession",
+    "ResearchConversation",
+    "ResearchMessage",
 ]

@@ -45,7 +45,12 @@ from backend.app.embeddings.base import (
 from backend.app.embeddings.factory import (
     create_embedding_provider,
 )
-
+from backend.app.llms.base import (
+    LLMProvider,
+)
+from backend.app.llms.factory import (
+    create_llm_provider,
+)
 # ============================================================
 # Database Dependency
 # ============================================================
@@ -318,4 +323,14 @@ def get_embedding_provider(
 
     return (
         create_embedding_provider()
+    )
+
+def get_llm_provider(
+) -> LLMProvider:
+    """
+    获取当前进程缓存的 LLM Provider。
+    """
+
+    return (
+        create_llm_provider()
     )
