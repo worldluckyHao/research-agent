@@ -52,7 +52,9 @@ from backend.app.schemas.rag import (
 from backend.app.services.hybrid_retrieval import (
     hybrid_search_document,
 )
-
+from backend.app.observability.langsmith import (
+    observed_async,
+)
 
 # ============================================================
 # Retrieval Conversion
@@ -453,6 +455,13 @@ async def _answer_with_service_workflow(
         )
     )
 
+@observed_async(
+    name="rag.answer_document_question",
+    run_type="chain",
+    tags=[
+        "rag",
+    ],
+)
 
 # ============================================================
 # Unified Public Entry

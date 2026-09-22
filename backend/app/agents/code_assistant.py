@@ -3,7 +3,9 @@ import posixpath
 from typing import (
     Any,
 )
-
+from backend.app.observability.langsmith import (
+    observed_async,
+)
 from pydantic import (
     ValidationError,
 )
@@ -446,6 +448,11 @@ class CodePlannerAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.code.planner",
+        run_type="chain",
+        tags=["agent", "code", "planner"],
+    )
 
     async def plan(
         self,
@@ -662,6 +669,11 @@ class PatchGeneratorAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.code.patch_generator",
+        run_type="chain",
+        tags=["agent", "code", "patch"],
+    )
 
     async def generate(
         self,
@@ -878,6 +890,11 @@ class CodeSafetyReviewerAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.code.safety_reviewer",
+        run_type="chain",
+        tags=["agent", "code", "review"],
+    )
 
     async def review(
         self,
@@ -1058,6 +1075,11 @@ class CodeValidationPlannerAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.code.validation_planner",
+        run_type="chain",
+        tags=["agent", "code", "validation"],
+    )
 
     async def plan(
         self,
@@ -1264,6 +1286,11 @@ class ResearchCodeAssistantAgent:
             )
         )
 
+    @observed_async(
+        name="agent.code_assistant",
+        run_type="chain",
+        tags=["agent", "code-assistant"],
+    )
 
     async def propose_changes(
         self,

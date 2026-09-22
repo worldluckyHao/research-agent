@@ -1,0 +1,3 @@
+"""
+Research-Agent observability infrastructure.
+"""

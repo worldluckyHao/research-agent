@@ -1029,3 +1029,28 @@ class CodeAssistantPathViolationException(
 
             status_code=422,
         )
+
+class LangSmithConfigurationException(
+    AppException
+):
+    """
+    LangSmith 已启用，
+    但缺少必要配置。
+    """
+
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            code=(
+                "LANGSMITH_"
+                "CONFIGURATION_ERROR"
+            ),
+
+            message=(
+                "LangSmith tracing is enabled "
+                "but its configuration is incomplete"
+            ),
+
+            status_code=500,
+        )

@@ -53,7 +53,9 @@ from backend.app.schemas.rag import (
 from backend.app.services import (
     rag_service,
 )
-
+from backend.app.observability.langsmith import (
+    observed_async,
+)
 
 # ============================================================
 # Source
@@ -766,6 +768,14 @@ class PaperComparisonAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.paper_comparison",
+        run_type="chain",
+        tags=[
+            "agent",
+            "paper-comparison",
+        ],
+    )
 
     async def compare(
         self,

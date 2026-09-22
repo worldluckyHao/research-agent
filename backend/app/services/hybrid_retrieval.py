@@ -36,8 +36,17 @@ from backend.app.schemas.hybrid_search import (
 from backend.app.services.semantic_retrieval import (
     retrieve_semantic_candidates,
 )
-
-
+from backend.app.observability.langsmith import (
+    observed_async,
+)
+@observed_async(
+    name="retrieval.hybrid_search",
+    run_type="retriever",
+    tags=[
+        "retrieval",
+        "hybrid",
+    ],
+)
 async def hybrid_search_document(
     db: AsyncSession,
     document: PaperDocument,

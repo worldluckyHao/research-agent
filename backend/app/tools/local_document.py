@@ -18,7 +18,9 @@ from backend.app.tools.base import (
     ResearchTool,
     ToolResult,
 )
-
+from backend.app.observability.langsmith import (
+    observed_async,
+)
 
 class LocalDocumentSearchTool(
     ResearchTool
@@ -72,6 +74,14 @@ class LocalDocumentSearchTool(
             use_reranker
         )
 
+    @observed_async(
+        name="tool.local_document_search",
+        run_type="tool",
+        tags=[
+            "tool",
+            "local-document",
+        ],
+    )
 
     async def execute(
         self,

@@ -49,7 +49,9 @@ from backend.app.schemas.rag import (
     RAGModelInfoResponse,
     RAGPromptInfoResponse,
 )
-
+from backend.app.observability.langsmith import (
+    observed_async,
+)
 
 # ============================================================
 # Internal Candidate
@@ -501,6 +503,11 @@ class ResearchIdeaGeneratorAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.research_idea.generator",
+        run_type="chain",
+        tags=["agent", "research-idea", "generator"],
+    )
 
     async def generate(
         self,
@@ -643,6 +650,11 @@ class FeasibilityCriticAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.research_idea.feasibility_critic",
+        run_type="chain",
+        tags=["agent", "research-idea", "critic"],
+    )
 
     async def review(
         self,
@@ -813,6 +825,11 @@ class NoveltyRiskCriticAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.research_idea.novelty_critic",
+        run_type="chain",
+        tags=["agent", "research-idea", "critic"],
+    )
 
     async def review(
         self,
@@ -982,6 +999,11 @@ class ImplementationPlannerAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.research_idea.planner",
+        run_type="chain",
+        tags=["agent", "research-idea", "planner"],
+    )
 
     async def plan(
         self,
@@ -1237,6 +1259,11 @@ class ResearchIdeaAgent:
             )
         )
 
+    @observed_async(
+        name="agent.research_idea",
+        run_type="chain",
+        tags=["agent", "research-idea"],
+    )
 
     async def generate_ideas(
         self,

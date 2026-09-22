@@ -11,7 +11,9 @@ from backend.app.llms.base import (
     LLMGenerationResult,
     LLMProvider,
 )
-
+from backend.app.observability.langsmith import (
+    observed_async,
+)
 
 # ============================================================
 # Native Generation
@@ -105,6 +107,14 @@ async def _generate_with_langchain_engine(
 
     return result
 
+@observed_async(
+    name="llm.rag_generation",
+    run_type="llm",
+    tags=[
+        "llm",
+        "generation",
+    ],
+)
 
 # ============================================================
 # Generation Router

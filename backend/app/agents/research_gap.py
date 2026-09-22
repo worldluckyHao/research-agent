@@ -41,6 +41,9 @@ from backend.app.schemas.rag import (
     RAGModelInfoResponse,
     RAGPromptInfoResponse,
 )
+from backend.app.observability.langsmith import (
+    observed_async,
+)
 
 
 # ============================================================
@@ -812,6 +815,15 @@ class ResearchGapGeneratorAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.research_gap.generator",
+        run_type="chain",
+        tags=[
+            "agent",
+            "research-gap",
+            "generator",
+        ],
+    )
 
     async def generate(
         self,
@@ -965,6 +977,15 @@ class ResearchGapVerifierAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.research_gap.verifier",
+        run_type="chain",
+        tags=[
+            "agent",
+            "research-gap",
+            "verifier",
+        ],
+    )
 
     async def verify(
         self,
@@ -1192,6 +1213,14 @@ class ResearchGapAgent:
             )
         )
 
+    @observed_async(
+        name="agent.research_gap",
+        run_type="chain",
+        tags=[
+            "agent",
+            "research-gap",
+        ],
+    )
 
     async def discover(
         self,

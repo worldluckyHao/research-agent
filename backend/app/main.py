@@ -17,6 +17,14 @@ from backend.app.clients.arxiv import ArxivClient
 from backend.app.storage.factory import (
     create_storage_backend,
 )
+from backend.app.observability.langsmith import (
+    shutdown_langsmith,
+    validate_langsmith_configuration,
+)
+
+from backend.app.observability.middleware import (
+    LangSmithTracingMiddleware,
+)
 # ============================================================
 # 初始化日志系统
 # ============================================================
@@ -44,6 +52,10 @@ async def lifespan(app: FastAPI):
     """
     管理数据库连接池和外部 HTTP 连接池生命周期。
     """
+
+    # LangSmith 关闭时不要求 API Key；
+    # 开启时提前检查配置。
+    validate_langsmith_configuration()
 
     # 分别控制网络各阶段 timeout。
     timeout = httpx.Timeout(
@@ -90,6 +102,9 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    # 先尽量 Flush LangSmith Trace。
+    await shutdown_langsmith()
+
     # Shutdown
     await app.state.redis.aclose()
 
@@ -119,6 +134,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ============================================================
+# Observability
+# ============================================================
+
+app.add_middleware(
+    LangSmithTracingMiddleware
+)
 
 # ============================================================
 # Day9：业务异常 Handler

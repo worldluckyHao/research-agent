@@ -26,7 +26,6 @@ from backend.app.schemas.hybrid_search import (
     HybridSearchResponse,
 )
 
-
 # ============================================================
 # Agent Domain Results
 # ============================================================

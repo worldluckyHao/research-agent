@@ -16,6 +16,7 @@ from backend.app.core.exceptions import (
 from backend.app.llms.base import (
     LLMProvider,
 )
+from backend.app.observability.langsmith import observed_async
 from backend.app.prompts.registry import (
     prompt_registry,
 )
@@ -314,6 +315,11 @@ class ExperimentDesignerAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.experiment.designer",
+        run_type="chain",
+        tags=["agent", "experiment", "designer"],
+    )
 
     async def design(
         self,
@@ -507,6 +513,11 @@ class ExperimentDesignCriticAgent:
             llm_provider
         )
 
+    @observed_async(
+        name="agent.experiment.critic",
+        run_type="chain",
+        tags=["agent", "experiment", "critic"],
+    )
 
     async def review(
         self,
@@ -696,6 +707,11 @@ class ResearchExperimentAgent:
             )
         )
 
+    @observed_async(
+        name="agent.experiment",
+        run_type="chain",
+        tags=["agent", "experiment"],
+    )
 
     async def design_experiment(
         self,

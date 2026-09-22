@@ -650,13 +650,14 @@ class Settings(BaseSettings):
 
     # Day30 默认使用本地 Hugging Face Model。
     LLM_PROVIDER: Literal[
-        "huggingface"
-    ] = "huggingface"
+        "huggingface",
+        "bailian",
+    ] = "bailian"
 
     # Day30 使用较小模型，
     # 便于本地开发验证完整 RAG Pipeline。
     LLM_MODEL_NAME: str = (
-        "Qwen/Qwen2.5-1.5B-Instruct"
+         "qwen3.8-flash"
     )
 
     # auto:
@@ -697,11 +698,12 @@ class Settings(BaseSettings):
     # ========================================================
 
     LLM_PROVIDER: Literal[
-        "huggingface"
-    ] = "huggingface"
+        "huggingface",
+        "bailian",
+    ] = "bailian"
 
     LLM_MODEL_NAME: str = (
-        "Qwen/Qwen2.5-1.5B-Instruct"
+        "qwen3.8-flash"
     )
 
     # auto:
@@ -727,6 +729,30 @@ class Settings(BaseSettings):
 
     # 没有 Evidence 时直接拒答。
     RAG_REQUIRE_EVIDENCE: bool = True
+
+    # ========================================================
+    # Alibaba Cloud Bailian
+    # ========================================================
+
+    # 百炼 API Key。
+    #
+    # 使用 SecretStr，
+    # 避免 Settings repr 时直接泄露。
+    BAILIAN_API_KEY: Optional[
+        SecretStr
+    ] = None
+
+    # OpenAI-Compatible Base URL。
+    BAILIAN_BASE_URL: str = (
+        "https://dashscope.aliyuncs.com/"
+        "compatible-mode/v1"
+    )
+
+    # 单次 API 调用超时。
+    BAILIAN_TIMEOUT_SECONDS: float = 120.0
+
+    # OpenAI SDK 自动重试次数。
+    BAILIAN_MAX_RETRIES: int = 2
 
     # ========================================================
     # Prompt Management
@@ -989,6 +1015,77 @@ class Settings(BaseSettings):
         "credentials,"
         "private_key,"
         "security/"
+    )
+
+
+    # ========================================================
+    # LangSmith Observability
+    # ========================================================
+
+    # 是否启用 LangSmith Trace。
+    #
+    # 开发时可以随时关闭，
+    # 不影响 Research-Agent 核心业务。
+    LANGSMITH_ENABLED: bool = False
+
+
+    # LangSmith API Key。
+    #
+    # 只写 backend/.env，
+    # 永远不要提交 Git。
+    LANGSMITH_API_KEY: Optional[str] = None
+
+
+    # 官方默认 API Endpoint。
+    LANGSMITH_ENDPOINT: str = (
+        "https://api.smith.langchain.com"
+    )
+
+
+    # LangSmith Trace Project。
+    #
+    # 所有 Research-Agent Trace
+    # 默认归到这个 Project。
+    LANGSMITH_PROJECT: str = (
+        "research-agent-dev"
+    )
+
+
+    # 某些组织级 API Key
+    # 可能需要 Workspace ID。
+    LANGSMITH_WORKSPACE_ID: Optional[str] = None
+
+
+    # environment tag:
+    #
+    # development
+    # staging
+    # production
+    LANGSMITH_ENVIRONMENT: str = "development"
+
+
+    # 是否把 Prompt / Answer 正文
+    # 上传到 LangSmith。
+    #
+    # 默认 False：
+    # 只观察结构、Metadata、Latency。
+    #
+    # 需要深入 Prompt Debug 时
+    # 再主动开启。
+    LANGSMITH_CAPTURE_CONTENT: bool = False
+
+
+    # 是否隐藏 Python / OS 等
+    # Runtime Information。
+    LANGSMITH_OMIT_RUNTIME_INFO: bool = True
+
+
+    # 不需要 Trace 的 HTTP Path。
+    LANGSMITH_EXCLUDED_PATHS: str = (
+        "/health,"
+        "/docs,"
+        "/redoc,"
+        "/openapi.json"
     )
 
 # ============================================================
