@@ -1088,6 +1088,85 @@ class Settings(BaseSettings):
         "/openapi.json"
     )
 
+
+    # ========================================================
+    # RAG Evaluation
+    # ========================================================
+
+    # 是否使用 LLM-as-a-Judge。
+    RAG_EVALUATION_LLM_JUDGE_ENABLED: bool = True
+
+
+    # Judge Prompt Version。
+    RAG_EVALUATION_PROMPT_VERSION: int = 1
+
+
+    # 避免把过大的 Evidence
+    # 一次性发送给 Judge。
+    RAG_EVALUATION_MAX_EVIDENCE_CHARS: int = (
+        12000
+    )
+
+
+    # Groundedness Quality Gate。
+    RAG_EVALUATION_MIN_GROUNDEDNESS: float = (
+        0.70
+    )
+
+
+    # Relevance Quality Gate。
+    RAG_EVALUATION_MIN_RELEVANCE: float = (
+        0.70
+    )
+
+
+    # 当存在 Gold Label 时，
+    # Retrieval Recall 最低要求。
+    RAG_EVALUATION_MIN_RECALL_AT_K: float = (
+        0.80
+    )
+
+
+    # ========================================================
+    # Agent Evaluation
+    # ========================================================
+
+    # 是否启用 Agent LLM-as-a-Judge。
+    AGENT_EVALUATION_LLM_JUDGE_ENABLED: bool = True
+
+
+    # Agent Evaluation Prompt Version。
+    AGENT_EVALUATION_PROMPT_VERSION: int = 1
+
+
+    # 防止过长 Trace 全部发送给 Judge。
+    AGENT_EVALUATION_MAX_TRACE_CHARS: int = 16000
+
+
+    # Tool Selection F1 最低要求。
+    AGENT_EVALUATION_MIN_TOOL_F1: float = 0.70
+
+
+    # Tool Execution Success Rate 最低要求。
+    AGENT_EVALUATION_MIN_TOOL_SUCCESS_RATE: float = 0.80
+
+
+    # Agent Goal Completion 最低要求。
+    AGENT_EVALUATION_MIN_GOAL_COMPLETION: float = 0.75
+
+
+    # Final Answer Quality 最低要求。
+    AGENT_EVALUATION_MIN_FINAL_ANSWER_QUALITY: float = 0.70
+
+
+    # Observable Trajectory Coherence 最低要求。
+    AGENT_EVALUATION_MIN_TRAJECTORY_COHERENCE: float = 0.70
+
+
+    # 提供 Evidence 时，
+    # Groundedness 最低要求。
+    AGENT_EVALUATION_MIN_GROUNDEDNESS: float = 0.70
+
 # ============================================================
 # ★ 非常重要：创建全局 Settings 实例
 # ============================================================

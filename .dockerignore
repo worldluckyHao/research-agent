@@ -1,0 +1,45 @@
+# Git
+.git
+.github
+.gitignore
+
+# IDE
+.idea
+.vscode
+
+# Python
+__pycache__
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+htmlcov
+
+# Virtual environments
+.venv
+venv
+env
+
+# Secrets
+.env
+backend/.env
+*.env
+
+# Tests cache
+.mypy_cache
+.ruff_cache
+
+# Local data
+storage
+uploads
+logs
+
+# Backup
+backup
+*.dump
+*.sql
+
+# Frontend - future
+frontend/node_modules
+frontend/.next

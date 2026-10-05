@@ -18,6 +18,12 @@ from backend.app.core.config import settings
 from backend.app.api import (
     research_sessions,
 )
+from backend.app.api import (
+    rag_evaluations,
+)
+from backend.app.api import (
+    agent_evaluations,
+)
 
 api_router = APIRouter(
     prefix=settings.API_V1_PREFIX
@@ -69,4 +75,10 @@ api_router.include_router(
 )
 api_router.include_router(
     code_assistant.router
+)
+api_router.include_router(
+    rag_evaluations.router
+)
+api_router.include_router(
+    agent_evaluations.router
 )
