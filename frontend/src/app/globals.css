@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+
+:root {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+
+html,
+body {
+  min-height: 100%;
+}
+
+
+body {
+  margin: 0;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+
+button,
+input {
+  font: inherit;
+}
+
+
+button {
+  cursor: pointer;
+}
