@@ -18,7 +18,9 @@ import {
 import type {
   Paper,
 } from "@/types/paper";
-
+import {
+  DocumentsSection,
+} from "@/components/papers/documents-section";
 
 export default function PaperDetailPage() {
   const params =
@@ -242,6 +244,11 @@ export default function PaperDetailPage() {
           </a>
         )}
       </article>
+      <DocumentsSection
+          paperId={
+            paper.id
+          }
+      />
     </div>
   );
 }

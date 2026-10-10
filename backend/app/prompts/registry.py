@@ -5,8 +5,8 @@ from backend.app.core.exceptions import (
 from backend.app.prompts.base import (
     PromptDefinition,
 )
-
-
+import logging
+logger = logging.getLogger(__name__)
 class PromptRegistry:
     """
     Prompt Registry（提示词注册表）。
@@ -100,15 +100,14 @@ class PromptRegistry:
 
         return prompt
 
-
     def render(
-        self,
-        prompt_id: str,
-        version: int,
-        **variables,
+            self,
+            prompt_id: str,
+            version: int,
+            **variables,
     ) -> str:
         """
-        获取 + 渲染 Prompt。
+        获取并渲染 Prompt。
         """
 
         prompt = self.get(
@@ -116,23 +115,18 @@ class PromptRegistry:
             version=version,
         )
 
-
         try:
-
             return prompt.render(
                 **variables
             )
 
-
         except (
-            KeyError,
-            ValueError,
+                KeyError,
+                ValueError,
         ) as exc:
-
             raise (
                 PromptRenderException()
             ) from exc
-
 
 prompt_registry = (
     PromptRegistry()

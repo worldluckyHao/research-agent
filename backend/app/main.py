@@ -25,6 +25,7 @@ from backend.app.observability.langsmith import (
 from backend.app.observability.middleware import (
     LangSmithTracingMiddleware,
 )
+from fastapi.middleware.cors import CORSMiddleware
 # ============================================================
 # 初始化日志系统
 # ============================================================
@@ -133,6 +134,51 @@ app = FastAPI(
     # 生命周期管理。
     lifespan=lifespan,
 )
+
+# ============================================================
+# Observability
+# ============================================================
+
+# ============================================================
+# CORS
+# ============================================================
+#
+# 前端运行在：
+#     http://localhost:3000
+#
+# 后端运行在：
+#     http://127.0.0.1:8000
+#
+# 两者属于不同 Origin，因此浏览器发送 JSON、
+# Authorization Header 等请求时可能先发送 OPTIONS
+# 预检请求。
+#
+# CORSMiddleware 统一处理这些跨域请求，
+# 不需要手动编写 OPTIONS 路由。
+#
+app.add_middleware(
+    CORSMiddleware,
+
+    # 允许的前端 Origin 从配置读取。
+    allow_origins=(
+        settings.CORS_ORIGINS_LIST
+    ),
+
+    # 允许携带 Cookie / Authorization 等凭证信息。
+    allow_credentials=True,
+
+    # 开发阶段允许所有 HTTP Method，
+    # 后续 POST / PATCH / DELETE 都不会再被 CORS 卡住。
+    allow_methods=[
+        "*"
+    ],
+
+    # 允许 Content-Type、Authorization 等请求头。
+    allow_headers=[
+        "*"
+    ],
+)
+
 
 # ============================================================
 # Observability

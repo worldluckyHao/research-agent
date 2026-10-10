@@ -46,20 +46,20 @@ Choose at most one tool from the provided tool catalog.
 Return valid JSON only.
 
 Required JSON format:
-{
+{{
   "action": "call_tool",
   "tool_name": "tool_name",
   "query": "query to send to the tool",
   "reason": "brief reason for selecting this tool"
-}
+}}
 
 If no available tool can help, return:
-{
+{{
   "action": "no_tool",
   "tool_name": null,
   "query": "",
   "reason": "brief explanation"
-}
+}}
 
 Rules:
 1. You may only select a tool whose exact name appears in the tool catalog.
